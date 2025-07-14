@@ -2,10 +2,18 @@
 
 variable "aws_region" {
   description = "AWS region"
+  default = "us-east-2"
 }
 
-variable "aws_zone" {
-  description = "AWS zone"
+variable "subnet_list" {
+  description = "AWS Subnet List"
+  type = list(string)
+  default = ["us-east-2a", "us-east-2b", "us-east-2c"]
+}
+
+variable "vpc_id" {
+  description = "AWS VPC ID"
+  type = string
 }
 
 variable "environment_name" {
@@ -22,20 +30,17 @@ variable "ssh_private_key" {
 
 variable "cidr_block" {
   description = "VPC CIDR"
-}
-
-variable "subnet_block" {
-  description = "Subnet CIDR"
+  default = "10.55.0.0/16"
 }
 
 variable "machine_type" {
   description = "Machine Type"
-  default     = "t2.micro"
+  default     = "m5.xlarge"
 }
 
 variable "root_volume_size" {
   description = "The root volume size"
-  default     = "50"
+  default     = "128"
 }
 
 variable "root_volume_type" {
