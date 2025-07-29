@@ -20,14 +20,65 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
+data "aws_route53_zone" "domain" {
+  name = var.parent_domain
+}
+
 data "aws_vpc" "vpc" {
   id = var.vpc_id
+}
+
+data "aws_route_tables" "public_route_tables" {
+  vpc_id = var.vpc_id
+
+  filter {
+    name   = "route.gateway-id"
+    values = ["igw-*"]
+  }
+}
+
+data "aws_route_tables" "all_route_tables" {
+  vpc_id = var.vpc_id
+}
+
+locals {
+  private_route_table_ids = setsubtract(
+    toset(data.aws_route_tables.all_route_tables.ids),
+    toset(data.aws_route_tables.public_route_tables.ids)
+  )
+}
+
+data "aws_route_table" "target_route_tables" {
+  for_each = toset(var.public_subnets ? data.aws_route_tables.public_route_tables.ids : local.private_route_table_ids)
+  route_table_id = each.value
+}
+
+locals {
+  associated_subnet_ids = flatten([
+    for rt in data.aws_route_table.target_route_tables : [
+      for assoc in rt.associations : assoc.subnet_id
+      if assoc.subnet_id != null
+    ]
+  ])
 }
 
 data "aws_subnets" "subnets" {
   filter {
     name   = "vpc-id"
     values = [var.vpc_id]
+  }
+
+  filter {
+    name   = "subnet-id"
+    values = local.associated_subnet_ids
+  }
+
+  dynamic "filter" {
+    for_each = length(var.availability_zones) > 0 ? [1] : []
+    content {
+      name   = "availability-zone"
+      values = var.availability_zones
+    }
   }
 }
 
@@ -40,9 +91,8 @@ locals {
   subnet_ids = [for subnet in data.aws_subnet.subnet_list : subnet.id]
 }
 
-resource "aws_key_pair" "host_key" {
-  key_name   = "${var.environment_name}-key"
-  public_key = var.ssh_key
+locals {
+  vpc_dns_server = cidrhost(data.aws_vpc.vpc.cidr_block, 2)
 }
 
 resource "aws_security_group" "env_sg" {
@@ -66,15 +116,36 @@ resource "aws_security_group" "env_sg" {
   }
 
   ingress {
-    from_port        = 80
-    to_port          = 80
+    from_port        = 6379
+    to_port          = 6379
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
 
   ingress {
-    from_port        = 443
-    to_port          = 443
+    from_port        = 16379
+    to_port          = 16379
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 8443
+    to_port          = 8443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 9443
+    to_port          = 9443
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 10000
+    to_port          = 19999
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
@@ -93,14 +164,13 @@ resource "aws_security_group" "env_sg" {
   }
 }
 
-resource "aws_instance" "redis_node" {
+resource "aws_instance" "redis_nodes" {
   count                  = var.node_count
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.machine_type
-  key_name               = aws_key_pair.host_key.key_name
+  key_name               = var.key_pair
   vpc_security_group_ids = [aws_security_group.env_sg.id]
   subnet_id              = local.subnet_ids[count.index % length(local.subnet_ids)]
-  depends_on             = [aws_key_pair.host_key]
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -108,19 +178,44 @@ resource "aws_instance" "redis_node" {
     iops        = var.root_volume_iops
   }
 
-  tags = {
-    Name = "${var.environment_name}-node-${count.index}"
-  }
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/rec.sh", {
+    aws_access_key_id     = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+    aws_session_token     = var.aws_session_token
+    aws_region            = var.aws_region
+    redis_distribution    = var.redis_distribution
+    dns_server            = local.vpc_dns_server
+  }))
 
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update -y",
-    ]
-    connection {
-      host        = self.public_ip
-      type        = "ssh"
-      user        = "ubuntu"
-      private_key = base64decode(var.ssh_private_key)
-    }
+  tags = {
+    Name = "host${count.index + 1}"
   }
+}
+
+# Route53 Subdomain Hosted Zone
+resource "aws_route53_zone" "subdomain" {
+  name = "${var.environment_name}.${var.parent_domain}"
+
+  tags = {
+    Name = "${var.environment_name}.${var.parent_domain}"
+  }
+}
+
+# NS Record in parent domain pointing to subdomain
+resource "aws_route53_record" "subdomain_ns" {
+  zone_id = data.aws_route53_zone.domain.zone_id
+  name    = var.environment_name
+  type    = "NS"
+  ttl     = 300
+  records = aws_route53_zone.subdomain.name_servers
+}
+
+# A Records for each instance
+resource "aws_route53_record" "host_records" {
+  count   = var.node_count
+  zone_id = aws_route53_zone.subdomain.zone_id
+  name    = "host${count.index + 1}"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.redis_nodes[count.index].private_ip]
 }

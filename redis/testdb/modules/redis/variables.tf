@@ -5,10 +5,21 @@ variable "aws_region" {
   default = "us-east-2"
 }
 
-variable "subnet_list" {
-  description = "AWS Subnet List"
+variable "availability_zones" {
+  description = "AWS availability zone List"
   type = list(string)
   default = ["us-east-2a", "us-east-2b", "us-east-2c"]
+}
+
+variable "public_subnets" {
+  description = "Select public subnets"
+  type        = bool
+  default     = false
+}
+
+variable "parent_domain" {
+  description = "Parent DNS domain"
+  type = string
 }
 
 variable "vpc_id" {
@@ -20,12 +31,8 @@ variable "environment_name" {
   description = "Environment name"
 }
 
-variable "ssh_key" {
-  description = "Admin SSH key"
-}
-
-variable "ssh_private_key" {
-  description = "Admin SSH private key"
+variable "key_pair" {
+  description = "Admin SSH key pair"
 }
 
 variable "cidr_block" {
@@ -56,4 +63,30 @@ variable "root_volume_iops" {
 variable "node_count" {
   description = "Node count"
   default     = 3
+}
+
+variable "aws_access_key_id" {
+  description = "AWS Access Key ID"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "aws_secret_access_key" {
+  description = "AWS Secret Access Key"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "aws_session_token" {
+  description = "AWS Session Token"
+  type        = string
+  sensitive   = true
+  default     = null
+}
+
+variable "redis_distribution" {
+  description = "Redis Enterprise distribution tar file"
+  type = string
 }

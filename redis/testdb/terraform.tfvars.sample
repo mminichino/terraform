@@ -1,0 +1,8 @@
+environment   = "demodb"
+aws_key_pair  = "my-key"
+aws_vpc       = "vpc-1234"
+dns_domain    = "example.com"
+access_key    = ""
+secret_key    = ""
+session_token = ""
+software      = "redislabs-7.22.0-241-jammy-amd64.tar"
