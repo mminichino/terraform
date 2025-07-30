@@ -20,3 +20,8 @@ output "subdomain_name_servers" {
   description = "Name servers for the subdomain"
   value       = aws_route53_zone.subdomain.name_servers
 }
+
+output "vpc_dns_address" {
+  description = "VPC DNS server"
+  value       = local.vpc_dns_server
+}

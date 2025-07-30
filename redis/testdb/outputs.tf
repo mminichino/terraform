@@ -31,5 +31,6 @@ output "redis_environment_info" {
     environment = var.environment
     domain      = var.dns_domain
     vpc_id      = var.aws_vpc
+    vpc_dns     = module.redis-enterprise.vpc_dns_address
   }
 }

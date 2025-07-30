@@ -89,9 +89,6 @@ data "aws_subnet" "subnet_list" {
 
 locals {
   subnet_ids = [for subnet in data.aws_subnet.subnet_list : subnet.id]
-}
-
-locals {
   vpc_dns_server = cidrhost(data.aws_vpc.vpc.cidr_block, 2)
 }
 
@@ -192,7 +189,6 @@ resource "aws_instance" "redis_nodes" {
   }
 }
 
-# Route53 Subdomain Hosted Zone
 resource "aws_route53_zone" "subdomain" {
   name = "${var.environment_name}.${var.parent_domain}"
 
@@ -201,7 +197,6 @@ resource "aws_route53_zone" "subdomain" {
   }
 }
 
-# NS Record in parent domain pointing to subdomain
 resource "aws_route53_record" "subdomain_ns" {
   zone_id = data.aws_route53_zone.domain.zone_id
   name    = var.environment_name
@@ -210,7 +205,6 @@ resource "aws_route53_record" "subdomain_ns" {
   records = aws_route53_zone.subdomain.name_servers
 }
 
-# A Records for each instance
 resource "aws_route53_record" "host_records" {
   count   = var.node_count
   zone_id = aws_route53_zone.subdomain.zone_id
