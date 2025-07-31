@@ -2,22 +2,17 @@
 
 output "redis_node_private_ips" {
   description = "Private IP addresses of Redis nodes"
-  value       = module.redis-enterprise.node-private
+  value       = module.redis-enterprise.node_private
 }
 
 output "redis_node_public_ips" {
   description = "Public IP addresses of Redis nodes"
-  value       = module.redis-enterprise.node-public
+  value       = module.redis-enterprise.node_public
 }
 
 output "redis_instance_hostnames" {
   description = "Generated hostnames for Redis instances"
   value       = module.redis-enterprise.instance_hostnames
-}
-
-output "redis_subdomain_zone_id" {
-  description = "Zone ID of the created subdomain"
-  value       = module.redis-enterprise.subdomain_zone_id
 }
 
 output "redis_admin_urls" {

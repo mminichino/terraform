@@ -19,10 +19,18 @@ while true; do
 done
 
 CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
+CURRENT_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
+CURRENT_AZ=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
 echo "Current node IP: $CURRENT_IP"
+echo "Current node public IP: $CURRENT_PUBLIC_IP"
+echo "Current node availability zone: $CURRENT_AZ"
 
 NODE_IPS=(${node_ips})
+PUBLIC_IPS=(${public_ips})
+NODE_AZS=(${node_azs})
 echo "All node IPs: $${NODE_IPS[*]}"
+echo "All public IPs: $${PUBLIC_IPS[*]}"
+echo "All zones: $${NODE_AZS[*]}"
 
 FIRST_NODE_IP=$(printf '%s\n' "$${NODE_IPS[@]}" | sort -V | head -n1)
 echo "First node IP: $FIRST_NODE_IP"
@@ -42,10 +50,15 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
         \"paths\": {
             \"persistent_path\": \"/var/opt/redislabs/persist\",
             \"ephemeral_path\": \"/var/opt/redislabs/tmp\"
+        },
+        \"identity\": {
+            \"addr\": \"$CURRENT_IP\",
+            \"external_addr\": [\"$CURRENT_PUBLIC_IP\"],
+            \"rack_id\": \"$CURRENT_AZ\"
         }
     },
-    \"identity\": {
-        \"addr\": \"$CURRENT_IP\"
+    \"policy\": {
+        \"rack_aware\": true
     },
     \"dns_suffixes\": [
         {\"name\": \"${dns_suffix}\", \"cluster_default\": true}
@@ -60,7 +73,11 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
     echo "Waiting for cluster initialization..."
     sleep 30
 
-    for node_ip in $${NODE_IPS[@]}; do
+    for i in $${!NODE_IPS[@]}; do
+        node_ip="$${NODE_IPS[i]}"
+        public_ip="$${PUBLIC_IPS[i]}"
+        node_az="$${NODE_AZS[i]}"
+
         if [ "$node_ip" != "$CURRENT_IP" ]; then
             echo "Adding node $node_ip to cluster..."
 
@@ -74,10 +91,15 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
                 \"paths\": {
                     \"persistent_path\": \"/var/opt/redislabs/persist\",
                     \"ephemeral_path\": \"/var/opt/redislabs/tmp\"
+                },
+                \"identity\": {
+                    \"addr\": \"$node_ip\",
+                    \"external_addr\": [\"$public_ip\"],
+                    \"rack_id\": \"$node_az\"
                 }
             },
-            \"identity\": {
-                \"addr\": \"$node_ip\"
+            \"policy\": {
+                \"rack_aware\": true
             },
             \"credentials\": {
                 \"username\": \"admin@redislabs.com\",

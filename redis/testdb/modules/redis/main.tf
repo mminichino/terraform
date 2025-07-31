@@ -20,8 +20,14 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
-data "aws_route53_zone" "domain" {
+data "aws_route53_zone" "public_zone" {
   name = var.parent_domain
+}
+
+data "aws_route53_zone" "private_zone" {
+  count        = 1
+  name         = var.parent_domain
+  private_zone = true
 }
 
 data "aws_vpc" "vpc" {
@@ -113,6 +119,20 @@ resource "aws_security_group" "env_sg" {
   }
 
   ingress {
+    from_port        = 53
+    to_port          = 53
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port        = 53
+    to_port          = 53
+    protocol         = "udp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  ingress {
     from_port        = 6379
     to_port          = 6379
     protocol         = "tcp"
@@ -162,12 +182,13 @@ resource "aws_security_group" "env_sg" {
 }
 
 resource "aws_instance" "redis_nodes" {
-  count                  = var.node_count
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.machine_type
-  key_name               = var.key_pair
-  vpc_security_group_ids = [aws_security_group.env_sg.id]
-  subnet_id              = local.subnet_ids[count.index % length(local.subnet_ids)]
+  count                       = var.node_count
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.machine_type
+  key_name                    = var.key_pair
+  vpc_security_group_ids      = [aws_security_group.env_sg.id]
+  subnet_id                   = local.subnet_ids[count.index % length(local.subnet_ids)]
+  associate_public_ip_address = true
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -189,29 +210,43 @@ resource "aws_instance" "redis_nodes" {
   }
 }
 
-resource "aws_route53_zone" "subdomain" {
-  name = "${var.environment_name}.${var.parent_domain}"
-
-  tags = {
-    Name = "${var.environment_name}.${var.parent_domain}"
-  }
+resource "aws_route53_record" "host_records" {
+  count   = var.node_count
+  zone_id = data.aws_route53_zone.public_zone.zone_id
+  name    = "node${count.index + 1}.${var.environment_name}"
+  type    = "A"
+  ttl     = 300
+  records = [aws_instance.redis_nodes[count.index].public_ip]
+  depends_on = [aws_instance.redis_nodes]
 }
 
-resource "aws_route53_record" "subdomain_ns" {
-  zone_id = data.aws_route53_zone.domain.zone_id
+resource "aws_route53_record" "ns_record" {
+  zone_id = data.aws_route53_zone.public_zone.zone_id
   name    = var.environment_name
   type    = "NS"
   ttl     = 300
-  records = aws_route53_zone.subdomain.name_servers
+  records = [for i in range(var.node_count) : "node${i + 1}.${var.environment_name}.${data.aws_route53_zone.public_zone.name}"]
+  depends_on = [aws_instance.redis_nodes]
 }
 
-resource "aws_route53_record" "host_records" {
-  count   = var.node_count
-  zone_id = aws_route53_zone.subdomain.zone_id
-  name    = "host${count.index + 1}"
+resource "aws_route53_record" "private_host_records" {
+  count   = length(data.aws_route53_zone.private_zone) > 0 ? var.node_count : 0
+  zone_id = data.aws_route53_zone.private_zone[0].zone_id
+  name    = "node${count.index + 1}.${var.environment_name}"
   type    = "A"
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].private_ip]
+  depends_on = [aws_instance.redis_nodes]
+}
+
+resource "aws_route53_record" "private_ns_record" {
+  count   = length(data.aws_route53_zone.private_zone) > 0 ? 1 : 0
+  zone_id = data.aws_route53_zone.private_zone[0].zone_id
+  name    = var.environment_name
+  type    = "NS"
+  ttl     = 300
+  records = [for i in range(var.node_count) : "node${i + 1}.${var.environment_name}.${data.aws_route53_zone.private_zone[0].name}"]
+  depends_on = [aws_instance.redis_nodes]
 }
 
 resource "null_resource" "create_cluster" {
@@ -229,9 +264,11 @@ resource "null_resource" "create_cluster" {
   provisioner "file" {
     content = templatefile("${path.module}/scripts/setup_cluster.sh", {
       node_ips         = join(" ", aws_instance.redis_nodes[*].private_ip)
+      public_ips       = join(" ", aws_instance.redis_nodes[*].public_ip)
+      node_azs         = join(" ", aws_instance.redis_nodes[*].availability_zone)
       environment_name = var.environment_name
       admin_password   = var.admin_password
-      dns_suffix       = aws_route53_zone.subdomain.name
+      dns_suffix       = "${var.environment_name}.${data.aws_route53_zone.public_zone.name}"
     })
     destination = "/tmp/setup_cluster.sh"
   }
@@ -243,5 +280,5 @@ resource "null_resource" "create_cluster" {
     ]
   }
 
-  depends_on = [aws_instance.redis_nodes, aws_route53_zone.subdomain]
+  depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record, aws_route53_record.host_records]
 }
