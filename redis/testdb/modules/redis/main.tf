@@ -213,3 +213,35 @@ resource "aws_route53_record" "host_records" {
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].private_ip]
 }
+
+resource "null_resource" "create_cluster" {
+  triggers = {
+    node_ips = join(" ", aws_instance.redis_nodes[*].private_ip)
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = aws_instance.redis_nodes[0].private_ip
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/scripts/setup_cluster.sh", {
+      node_ips         = join(" ", aws_instance.redis_nodes[*].private_ip)
+      environment_name = var.environment_name
+      admin_password   = var.admin_password
+      dns_suffix       = aws_route53_zone.subdomain.name
+    })
+    destination = "/tmp/setup_cluster.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/setup_cluster.sh",
+      "/tmp/setup_cluster.sh"
+    ]
+  }
+
+  depends_on = [aws_instance.redis_nodes, aws_route53_zone.subdomain]
+}

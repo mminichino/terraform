@@ -3,7 +3,7 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli
+apt install -y wget curl gnupg2 software-properties-common awscli jq
 
 # Configure AWS credentials if provided
 %{ if aws_access_key_id != null && aws_secret_access_key != null }

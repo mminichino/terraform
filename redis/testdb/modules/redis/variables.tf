@@ -65,6 +65,16 @@ variable "node_count" {
   default     = 3
 }
 
+variable "private_key_file" {
+  description = "Private key file"
+  type = string
+}
+
+variable "admin_password" {
+  description = "Redis admin password"
+  type = string
+}
+
 variable "aws_access_key_id" {
   description = "AWS Access Key ID"
   type        = string

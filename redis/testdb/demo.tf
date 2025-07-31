@@ -16,6 +16,10 @@ variable "dns_domain" {
   type = string
 }
 
+variable "private_key" {
+  type = string
+}
+
 variable "access_key" {
   type = string
 }
@@ -32,6 +36,10 @@ variable "software" {
   type = string
 }
 
+variable "admin_password" {
+  type = string
+}
+
 module "redis-enterprise" {
   source = "./modules/redis"
   environment_name      = var.environment
@@ -42,4 +50,6 @@ module "redis-enterprise" {
   aws_secret_access_key = var.secret_key
   aws_session_token     = var.session_token
   redis_distribution    = var.software
+  private_key_file      = var.private_key
+  admin_password        = var.admin_password
 }
