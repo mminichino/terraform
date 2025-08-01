@@ -32,7 +32,7 @@ echo "All node IPs: $${NODE_IPS[*]}"
 echo "All public IPs: $${PUBLIC_IPS[*]}"
 echo "All zones: $${NODE_AZS[*]}"
 
-FIRST_NODE_IP=$(printf '%s\n' "$${NODE_IPS[@]}" | sort -V | head -n1)
+FIRST_NODE_IP=$${NODE_IPS[0]}
 echo "First node IP: $FIRST_NODE_IP"
 
 if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then

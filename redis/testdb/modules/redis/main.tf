@@ -34,40 +34,6 @@ data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
 
-data "aws_route_tables" "public_route_tables" {
-  vpc_id = var.vpc_id
-
-  filter {
-    name   = "route.gateway-id"
-    values = ["igw-*"]
-  }
-}
-
-data "aws_route_tables" "all_route_tables" {
-  vpc_id = var.vpc_id
-}
-
-locals {
-  private_route_table_ids = setsubtract(
-    toset(data.aws_route_tables.all_route_tables.ids),
-    toset(data.aws_route_tables.public_route_tables.ids)
-  )
-}
-
-data "aws_route_table" "target_route_tables" {
-  for_each = toset(var.public_subnets ? data.aws_route_tables.public_route_tables.ids : local.private_route_table_ids)
-  route_table_id = each.value
-}
-
-locals {
-  associated_subnet_ids = flatten([
-    for rt in data.aws_route_table.target_route_tables : [
-      for assoc in rt.associations : assoc.subnet_id
-      if assoc.subnet_id != null
-    ]
-  ])
-}
-
 data "aws_subnets" "subnets" {
   filter {
     name   = "vpc-id"
@@ -75,8 +41,8 @@ data "aws_subnets" "subnets" {
   }
 
   filter {
-    name   = "subnet-id"
-    values = local.associated_subnet_ids
+    name   = "map-public-ip-on-launch"
+    values = ["true"]
   }
 
   dynamic "filter" {
