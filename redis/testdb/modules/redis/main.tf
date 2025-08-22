@@ -64,9 +64,9 @@ locals {
   vpc_dns_server = cidrhost(data.aws_vpc.vpc.cidr_block, 2)
 }
 
-resource "aws_security_group" "env_sg" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
+resource "aws_security_group" "redis_sg" {
+  name        = "${var.environment_name}-redis-sg"
+  description = "Redis Enterprise inbound traffic"
   vpc_id      = var.vpc_id
   depends_on = [var.vpc_id]
 
@@ -142,7 +142,41 @@ resource "aws_security_group" "env_sg" {
   }
 
   tags = {
-    Name = "${var.environment_name}-sg"
+    Name = "${var.environment_name}-redis-sg"
+    Environment = var.environment_name
+  }
+}
+
+resource "aws_security_group" "client_sg" {
+  name        = "${var.environment_name}-client-sg"
+  description = "Redis Enterprise inbound traffic"
+  vpc_id      = var.vpc_id
+  depends_on = [var.vpc_id]
+
+  ingress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = [data.aws_vpc.vpc.cidr_block]
+  }
+
+  ingress {
+    from_port        = 22
+    to_port          = 22
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port        = 0
+    to_port          = 0
+    protocol         = "-1"
+    cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
+  }
+
+  tags = {
+    Name = "${var.environment_name}-client-sg"
     Environment = var.environment_name
   }
 }
@@ -152,7 +186,7 @@ resource "aws_instance" "redis_nodes" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.machine_type
   key_name                    = var.key_pair
-  vpc_security_group_ids      = [aws_security_group.env_sg.id]
+  vpc_security_group_ids      = [aws_security_group.redis_sg.id]
   subnet_id                   = local.subnet_ids[count.index % length(local.subnet_ids)]
   associate_public_ip_address = true
 
@@ -172,7 +206,35 @@ resource "aws_instance" "redis_nodes" {
   }))
 
   tags = {
-    Name = "host${count.index + 1}"
+    Name = "${var.environment_name}-host-${count.index + 1}"
+  }
+}
+
+resource "aws_instance" "client_nodes" {
+  count                       = var.client_count
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.machine_type
+  key_name                    = var.key_pair
+  vpc_security_group_ids      = [aws_security_group.client_sg.id]
+  subnet_id                   = local.subnet_ids[count.index % length(local.subnet_ids)]
+  associate_public_ip_address = true
+
+  root_block_device {
+    volume_size = var.root_volume_size
+    volume_type = var.root_volume_type
+    iops        = var.root_volume_iops
+  }
+
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/client.sh", {
+    aws_access_key_id     = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+    aws_session_token     = var.aws_session_token
+    aws_region            = var.aws_region
+    dns_server            = local.vpc_dns_server
+  }))
+
+  tags = {
+    Name = "${var.environment_name}-client-${count.index + 1}"
   }
 }
 

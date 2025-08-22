@@ -40,11 +40,6 @@ sleep 30
 sudo systemctl stop ufw
 sudo systemctl disable ufw
 
-mkdir /tmp/redis
-cd /tmp/redis || exit
-
-echo "Installing Redis Enterprise"
-
 echo "Disabling DNS stub listener"
 cat > /etc/systemd/resolved.conf << EOF
 [Resolve]
@@ -63,22 +58,6 @@ nameserver ${dns_server}
 EOF
 
 chattr +i /etc/resolv.conf
-
-echo "Copying installation tar file"
-aws s3 cp s3://redis-enterprise-software/${redis_distribution} ./redis-enterprise.tar
-
-tar -xf redis-enterprise.tar
-
-if [ -f "install.sh" ]; then
-    echo "Running installation script"
-    ./install.sh -y
-else
-    echo "No recognized installation method found"
-    exit 1
-fi
-
-cd /
-rm -rf /tmp/redis
 
 CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 echo "Current node IP: $CURRENT_IP"

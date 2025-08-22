@@ -65,6 +65,11 @@ variable "node_count" {
   default     = 3
 }
 
+variable "client_count" {
+  description = "Client count"
+  default     = 1
+}
+
 variable "private_key_file" {
   description = "Private key file"
   type = string
