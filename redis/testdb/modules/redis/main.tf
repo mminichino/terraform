@@ -230,7 +230,6 @@ resource "aws_instance" "client_nodes" {
     aws_secret_access_key = var.aws_secret_access_key
     aws_session_token     = var.aws_session_token
     aws_region            = var.aws_region
-    dns_server            = local.vpc_dns_server
   }))
 
   tags = {
@@ -279,14 +278,14 @@ resource "aws_route53_record" "private_ns_record" {
 
 resource "null_resource" "create_cluster" {
   triggers = {
-    node_ips = join(" ", aws_instance.redis_nodes[*].private_ip)
+    node_ips = join(" ", aws_instance.redis_nodes[*].public_ip)
   }
 
   connection {
     type        = "ssh"
     user        = "ubuntu"
     private_key = file("~/.ssh/${var.private_key_file}")
-    host        = aws_instance.redis_nodes[0].private_ip
+    host        = aws_instance.redis_nodes[0].public_ip
   }
 
   provisioner "file" {
