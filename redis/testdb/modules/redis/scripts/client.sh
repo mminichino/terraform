@@ -3,7 +3,7 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli jq unzip openjdk-17-jre-headless python3-pip
+apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip
 
 %{ if aws_access_key_id != null && aws_secret_access_key != null }
 mkdir -p /root/.aws
