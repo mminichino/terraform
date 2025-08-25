@@ -5,34 +5,13 @@ variable "aws_region" {
   default = "us-east-2"
 }
 
-variable "availability_zones" {
-  description = "AWS availability zone List"
-  type = list(string)
-  default = ["us-east-2a", "us-east-2b", "us-east-2c"]
-}
-
-variable "public_subnets" {
-  description = "Select public subnets"
-  type        = bool
-  default     = false
-}
-
 variable "parent_domain" {
   description = "Parent DNS domain"
   type = string
 }
 
-variable "vpc_id" {
-  description = "AWS VPC ID"
-  type = string
-}
-
 variable "environment_name" {
   description = "Environment name"
-}
-
-variable "key_pair" {
-  description = "Admin SSH key pair"
 }
 
 variable "cidr_block" {
@@ -68,6 +47,11 @@ variable "node_count" {
 variable "client_count" {
   description = "Client count"
   default     = 1
+}
+
+variable "public_key_file" {
+  description = "Public key file"
+  type = string
 }
 
 variable "private_key_file" {

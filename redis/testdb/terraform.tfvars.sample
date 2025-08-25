@@ -1,7 +1,6 @@
 environment    = "demodb"
-aws_key_pair   = "my-key"
-aws_vpc        = "vpc-1234"
 dns_domain     = "example.com"
+public_key     = "id_rsa"
 private_key    = "id_rsa.pem"
 admin_password = "password"
 access_key     = ""

@@ -23,3 +23,8 @@ output "vpc_dns_address" {
   description = "VPC DNS server"
   value       = local.vpc_dns_server
 }
+
+output "aws_vpc_id" {
+  description = "VPC id"
+  value = aws_vpc.vpc.id
+}

@@ -30,51 +30,66 @@ data "aws_route53_zone" "private_zone" {
   private_zone = true
 }
 
-data "aws_vpc" "vpc" {
-  id = var.vpc_id
+data "aws_availability_zones" "zones" {
+  state = "available"
 }
 
-data "aws_subnets" "subnets" {
-  filter {
-    name   = "vpc-id"
-    values = [var.vpc_id]
-  }
-
-  filter {
-    name   = "map-public-ip-on-launch"
-    values = ["true"]
-  }
-
-  dynamic "filter" {
-    for_each = length(var.availability_zones) > 0 ? [1] : []
-    content {
-      name   = "availability-zone"
-      values = var.availability_zones
-    }
-  }
-}
-
-data "aws_subnet" "subnet_list" {
-  for_each = toset(data.aws_subnets.subnets.ids)
-  id       = each.value
+resource "random_string" "env_key" {
+  length           = 8
+  special          = false
+  upper            = false
 }
 
 locals {
-  subnet_ids = [for subnet in data.aws_subnet.subnet_list : subnet.id]
-  vpc_dns_server = cidrhost(data.aws_vpc.vpc.cidr_block, 2)
+  environment_id = random_string.env_key.id
+  name_prefix = "${var.environment_name}-${random_string.env_key.id}"
+  vpc_dns_server = cidrhost(var.cidr_block, 2)
+  has_private_zone = can(data.aws_route53_zone.private_zone[0].zone_id)
+}
+
+resource "aws_key_pair" "key_pair" {
+  key_name   = "${local.name_prefix}-key-pair"
+  public_key = file("~/.ssh/${var.public_key_file}")
+
+  tags = {
+    Name = "${local.name_prefix}-key-pair"
+  }
+}
+
+resource "aws_vpc" "vpc" {
+  cidr_block           = var.cidr_block
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "${local.name_prefix}-vpc"
+  }
+}
+
+resource "aws_subnet" "subnets" {
+  count                   = length(data.aws_availability_zones.zones.names)
+  vpc_id                  = aws_vpc.vpc.id
+  cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)
+  availability_zone       = data.aws_availability_zones.zones.names[count.index]
+  map_public_ip_on_launch = true
+  depends_on              = [aws_vpc.vpc]
+
+  tags = {
+    Name = "${local.name_prefix}-subnet-${data.aws_availability_zones.zones.names[count.index]}"
+    Type = "public"
+  }
 }
 
 resource "aws_security_group" "redis_sg" {
-  name        = "${var.environment_name}-redis-sg"
+  name        = "${local.name_prefix}-redis-sg"
   description = "Redis Enterprise inbound traffic"
-  vpc_id      = var.vpc_id
-  depends_on = [var.vpc_id]
+  vpc_id      = aws_vpc.vpc.id
+  depends_on  = [aws_vpc.vpc]
 
   ingress {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
-    cidr_blocks      = [data.aws_vpc.vpc.cidr_block]
+    cidr_blocks      = [aws_vpc.vpc.cidr_block]
   }
 
   ingress {
@@ -142,22 +157,22 @@ resource "aws_security_group" "redis_sg" {
   }
 
   tags = {
-    Name = "${var.environment_name}-redis-sg"
+    Name = "${local.name_prefix}-redis-sg"
     Environment = var.environment_name
   }
 }
 
 resource "aws_security_group" "client_sg" {
-  name        = "${var.environment_name}-client-sg"
+  name        = "${local.name_prefix}-client-sg"
   description = "Redis Enterprise inbound traffic"
-  vpc_id      = var.vpc_id
-  depends_on = [var.vpc_id]
+  vpc_id      = aws_vpc.vpc.id
+  depends_on  = [aws_vpc.vpc]
 
   ingress {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
-    cidr_blocks      = [data.aws_vpc.vpc.cidr_block]
+    cidr_blocks      = [aws_vpc.vpc.cidr_block]
   }
 
   ingress {
@@ -176,7 +191,7 @@ resource "aws_security_group" "client_sg" {
   }
 
   tags = {
-    Name = "${var.environment_name}-client-sg"
+    Name = "${local.name_prefix}-client-sg"
     Environment = var.environment_name
   }
 }
@@ -185,9 +200,9 @@ resource "aws_instance" "redis_nodes" {
   count                       = var.node_count
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.machine_type
-  key_name                    = var.key_pair
+  key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.redis_sg.id]
-  subnet_id                   = local.subnet_ids[count.index % length(local.subnet_ids)]
+  subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
   associate_public_ip_address = true
 
   root_block_device {
@@ -206,7 +221,7 @@ resource "aws_instance" "redis_nodes" {
   }))
 
   tags = {
-    Name = "${var.environment_name}-host-${count.index + 1}"
+    Name = "${local.name_prefix}-host-${count.index + 1}"
   }
 }
 
@@ -214,9 +229,9 @@ resource "aws_instance" "client_nodes" {
   count                       = var.client_count
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.machine_type
-  key_name                    = var.key_pair
+  key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.client_sg.id]
-  subnet_id                   = local.subnet_ids[count.index % length(local.subnet_ids)]
+  subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
   associate_public_ip_address = true
 
   root_block_device {
@@ -233,14 +248,14 @@ resource "aws_instance" "client_nodes" {
   }))
 
   tags = {
-    Name = "${var.environment_name}-client-${count.index + 1}"
+    Name = "${local.name_prefix}-client-${count.index + 1}"
   }
 }
 
 resource "aws_route53_record" "host_records" {
   count   = var.node_count
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = "node${count.index + 1}.${var.environment_name}"
+  name    = "node${count.index + 1}.${local.environment_id}"
   type    = "A"
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].public_ip]
@@ -252,14 +267,14 @@ resource "aws_route53_record" "ns_record" {
   name    = var.environment_name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${var.environment_name}.${data.aws_route53_zone.public_zone.name}"]
+  records = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${data.aws_route53_zone.public_zone.name}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
 resource "aws_route53_record" "private_host_records" {
-  count   = length(data.aws_route53_zone.private_zone) > 0 ? var.node_count : 0
+  count   = local.has_private_zone ? var.node_count : 0
   zone_id = data.aws_route53_zone.private_zone[0].zone_id
-  name    = "node${count.index + 1}.${var.environment_name}"
+  name    = "node${count.index + 1}.${local.environment_id}"
   type    = "A"
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].private_ip]
@@ -267,12 +282,12 @@ resource "aws_route53_record" "private_host_records" {
 }
 
 resource "aws_route53_record" "private_ns_record" {
-  count   = length(data.aws_route53_zone.private_zone) > 0 ? 1 : 0
+  count   = local.has_private_zone ? 1 : 0
   zone_id = data.aws_route53_zone.private_zone[0].zone_id
   name    = var.environment_name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${var.environment_name}.${data.aws_route53_zone.private_zone[0].name}"]
+  records = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${data.aws_route53_zone.private_zone[0].name}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
@@ -295,7 +310,7 @@ resource "null_resource" "create_cluster" {
       node_azs         = join(" ", aws_instance.redis_nodes[*].availability_zone)
       environment_name = var.environment_name
       admin_password   = var.admin_password
-      dns_suffix       = "${var.environment_name}.${data.aws_route53_zone.public_zone.name}"
+      dns_suffix       = "${local.environment_id}.${data.aws_route53_zone.public_zone.name}"
     })
     destination = "/tmp/setup_cluster.sh"
   }
