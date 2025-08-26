@@ -61,7 +61,8 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
         \"rack_aware\": true
     },
     \"dns_suffixes\": [
-        {\"name\": \"${dns_suffix}\", \"cluster_default\": true}
+        {\"name\": \"${dns_suffix}\", \"cluster_default\": true},
+        {\"name\": \"internal.${dns_suffix}\", \"use_internal_addr\": true}
     ],
     \"credentials\": {
         \"username\": \"admin@redislabs.com\",

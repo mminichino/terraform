@@ -24,12 +24,6 @@ data "aws_route53_zone" "public_zone" {
   name = var.parent_domain
 }
 
-data "aws_route53_zone" "private_zone" {
-  count        = 1
-  name         = var.parent_domain
-  private_zone = true
-}
-
 data "aws_availability_zones" "zones" {
   state = "available"
 }
@@ -44,7 +38,6 @@ locals {
   environment_id = random_string.env_key.id
   name_prefix = "${var.environment_name}-${random_string.env_key.id}"
   vpc_dns_server = cidrhost(var.cidr_block, 2)
-  has_private_zone = can(data.aws_route53_zone.private_zone[0].zone_id)
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -232,6 +225,7 @@ resource "aws_instance" "redis_nodes" {
   vpc_security_group_ids      = [aws_security_group.redis_sg.id]
   subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
   associate_public_ip_address = true
+  depends_on                  = [aws_route_table_association.public]
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -261,6 +255,7 @@ resource "aws_instance" "client_nodes" {
   vpc_security_group_ids      = [aws_security_group.client_sg.id]
   subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
   associate_public_ip_address = true
+  depends_on                  = [aws_route_table_association.public]
 
   root_block_device {
     volume_size = var.root_volume_size
@@ -273,6 +268,7 @@ resource "aws_instance" "client_nodes" {
     aws_secret_access_key = var.aws_secret_access_key
     aws_session_token     = var.aws_session_token
     aws_region            = var.aws_region
+    dns_server            = local.vpc_dns_server
   }))
 
   tags = {
@@ -292,30 +288,10 @@ resource "aws_route53_record" "host_records" {
 
 resource "aws_route53_record" "ns_record" {
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = var.environment_name
+  name    = local.environment_id
   type    = "NS"
   ttl     = 300
   records = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${data.aws_route53_zone.public_zone.name}"]
-  depends_on = [aws_instance.redis_nodes]
-}
-
-resource "aws_route53_record" "private_host_records" {
-  count   = local.has_private_zone ? var.node_count : 0
-  zone_id = data.aws_route53_zone.private_zone[0].zone_id
-  name    = "node${count.index + 1}.${local.environment_id}"
-  type    = "A"
-  ttl     = 300
-  records = [aws_instance.redis_nodes[count.index].private_ip]
-  depends_on = [aws_instance.redis_nodes]
-}
-
-resource "aws_route53_record" "private_ns_record" {
-  count   = local.has_private_zone ? 1 : 0
-  zone_id = data.aws_route53_zone.private_zone[0].zone_id
-  name    = var.environment_name
-  type    = "NS"
-  ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${data.aws_route53_zone.private_zone[0].name}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
