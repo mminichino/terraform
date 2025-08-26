@@ -16,7 +16,7 @@ output "client_public" {
 
 output "instance_hostnames" {
   description = "Generated hostnames for instances"
-  value       = [for i in range(var.node_count) : "node${i + 1}.${var.environment_name}.${var.parent_domain}"]
+  value       = [for i in range(var.node_count) : "node${i + 1}.${random_string.env_key.id}.${var.parent_domain}"]
 }
 
 output "vpc_dns_address" {
