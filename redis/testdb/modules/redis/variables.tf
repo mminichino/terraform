@@ -26,7 +26,8 @@ variable "machine_type" {
 
 variable "root_volume_size" {
   description = "The root volume size"
-  default     = "128"
+  default     = 64
+  type        = number
 }
 
 variable "root_volume_type" {
@@ -36,7 +37,26 @@ variable "root_volume_type" {
 
 variable "root_volume_iops" {
   description = "The root volume IOPS"
-  default     = "3000"
+  default     = 3000
+  type        = number
+}
+
+variable "data_volume_iops" {
+  description = "The data volume IOPS"
+  default     = 10000
+  type        = number
+}
+
+variable "data_volume_throughput" {
+  description = "The data volume throughput"
+  default     = 600
+  type        = number
+}
+
+variable "data_volume_size" {
+  description = "The data volume size"
+  default     = 256
+  type        = number
 }
 
 variable "node_count" {

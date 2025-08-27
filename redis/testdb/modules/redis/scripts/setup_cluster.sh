@@ -1,5 +1,66 @@
 #!/bin/bash
 
+mount_data_volume() {
+  local device=""
+  if compgen -G "/dev/nvme*n1" >/dev/null; then
+    for nv in /dev/nvme*n1; do
+      if dev=$(sudo python3 /tmp/ebsnvme.py -b "$nv" 2>/dev/null); then
+        if [[ "$dev" == "sdb" ]]; then
+          device="$nv"
+          break
+        fi
+      fi
+    done
+    if [[ -z "$device" ]]; then
+      echo "Could not resolve NVMe device that maps to sdb."
+      return 1
+    fi
+  else
+    device="/dev/xvdb"
+    if [[ ! -b "$device" ]]; then
+      echo "Expected non-NVMe device $device not found."
+      return 1
+    fi
+  fi
+
+  echo "Resolved sdb device: $device"
+
+  if [[ "$device" == *"nvme"* ]]; then
+    part="$${device}p1"
+  else
+    part="$${device}1"
+  fi
+
+  if [[ ! -b "$part" ]]; then
+    echo "Creating GPT partition on $device ..."
+    sudo parted -s "$device" mklabel gpt
+    sudo parted -s "$device" mkpart primary ext4 0% 100%
+    sudo partprobe "$device"
+    echo "Creating ext4 filesystem on $part ..."
+    sudo mkfs.ext4 -F -m 0 -L data "$part"
+  else
+    echo "Partition $part already exists."
+  fi
+
+  sudo mkdir -p /data
+
+  uuid=$(blkid -s UUID -o value "$part")
+  if [[ -z "$uuid" ]]; then
+    echo "$part /data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab >/dev/null
+  else
+    echo "UUID=$uuid /data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab >/dev/null
+  fi
+
+  sudo mount -a
+  echo "Data volume mounted at /data"
+  sudo mkdir -p /data/persistent
+  sudo mkdir -p /data/temp
+  sudo mkdir -p /data/flash
+  echo "Created data volume directory structure"
+  sudo chown -R redislabs:redislabs /data
+  echo "Set data volume ownership"
+}
+
 exec > /tmp/redis_cluster_setup.log 2>&1
 
 echo "Waiting for Redis Enterprise to start..."
@@ -17,6 +78,8 @@ while true; do
         exit 1
     fi
 done
+
+mount_data_volume || exit 1
 
 CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 CURRENT_PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
@@ -47,9 +110,11 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
         \"nodes\": []
     },
     \"node\": {
+        \"bigstore_enabled\": true,
         \"paths\": {
-            \"persistent_path\": \"/var/opt/redislabs/persist\",
-            \"ephemeral_path\": \"/var/opt/redislabs/tmp\"
+            \"persistent_path\": \"/data/persistent\",
+            \"ephemeral_path\": \"/data/temp\",
+            \"bigstore_path\": \"/data/flash\"
         },
         \"identity\": {
             \"addr\": \"$CURRENT_IP\",

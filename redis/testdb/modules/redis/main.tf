@@ -233,6 +233,14 @@ resource "aws_instance" "redis_nodes" {
     iops        = var.root_volume_iops
   }
 
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_type = "gp3"
+    volume_size = var.data_volume_size
+    iops        = var.data_volume_iops
+    throughput  = var.data_volume_throughput
+  }
+
   user_data_base64 = base64encode(templatefile("${path.module}/scripts/rec.sh", {
     aws_access_key_id     = var.aws_access_key_id
     aws_secret_access_key = var.aws_secret_access_key
@@ -317,6 +325,11 @@ resource "null_resource" "create_cluster" {
       dns_suffix       = "${local.environment_id}.${data.aws_route53_zone.public_zone.name}"
     })
     destination = "/tmp/setup_cluster.sh"
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/scripts/ebsnvme.py"
+    destination = "/tmp/ebsnvme.py"
   }
 
   provisioner "remote-exec" {
