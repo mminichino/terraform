@@ -83,3 +83,8 @@ rm -rf /tmp/redis
 CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 echo "Current node IP: $CURRENT_IP"
 echo "$CURRENT_IP $(hostname)" | sudo tee -a /etc/hosts
+
+usermod -a -G redislabs ubuntu
+cat <<EOF >> /home/ubuntu/.bashrc
+export PATH=/opt/redislabs/bin:$PATH
+EOF

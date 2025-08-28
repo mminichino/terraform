@@ -3,7 +3,18 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip
+apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip python3-dev
+
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+apt install -y nodejs
+npm install -g pm2
+
+curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list
+
+apt update
+apt install -y redis
 
 %{ if aws_access_key_id != null && aws_secret_access_key != null }
 mkdir -p /root/.aws
