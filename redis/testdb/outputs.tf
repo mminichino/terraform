@@ -30,12 +30,14 @@ output "redis_admin_urls" {
   value       = [for hostname in module.redis-enterprise.instance_hostnames : "https://${hostname}:8443"]
 }
 
-output "redis_environment_info" {
+output "environment_info" {
   description = "Environment information"
   value = {
     environment = var.environment
     domain      = var.dns_domain
     vpc_id      = module.redis-enterprise.aws_vpc_id
     vpc_dns     = module.redis-enterprise.vpc_dns_address
+    client      = module.redis-enterprise.client_machine_type
+    node        = module.redis-enterprise.redis_machine_type
   }
 }

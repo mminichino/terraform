@@ -3,7 +3,13 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip python3-dev
+apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip python3-dev cmake
+
+snap install astral-uv --classic
+
+curl -OLs --output-dir /tmp https://github.com/asdf-vm/asdf/releases/download/v0.18.0/asdf-v0.18.0-linux-amd64.tar.gz
+tar xzvf /tmp/asdf-v0.18.0-linux-amd64.tar.gz -C /usr/local/bin
+rm /tmp/asdf-v0.18.0-linux-amd64.tar.gz
 
 curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
 apt install -y nodejs

@@ -28,3 +28,13 @@ output "aws_vpc_id" {
   description = "VPC id"
   value = aws_vpc.vpc.id
 }
+
+output "redis_machine_type" {
+  description = "Redis node AWS instance type"
+  value = var.redis_machine_type
+}
+
+output "client_machine_type" {
+  description = "Client node AWS instance type"
+  value = var.client_machine_type
+}

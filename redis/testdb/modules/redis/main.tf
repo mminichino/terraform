@@ -220,7 +220,7 @@ resource "aws_security_group" "client_sg" {
 resource "aws_instance" "redis_nodes" {
   count                       = var.node_count
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.machine_type
+  instance_type               = var.redis_machine_type
   key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.redis_sg.id]
   subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
@@ -258,7 +258,7 @@ resource "aws_instance" "redis_nodes" {
 resource "aws_instance" "client_nodes" {
   count                       = var.client_count
   ami                         = data.aws_ami.ubuntu.id
-  instance_type               = var.machine_type
+  instance_type               = var.client_machine_type
   key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.client_sg.id]
   subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id

@@ -19,9 +19,14 @@ variable "cidr_block" {
   default = "10.55.0.0/16"
 }
 
-variable "machine_type" {
+variable "redis_machine_type" {
   description = "Machine Type"
-  default     = "m5.xlarge"
+  default     = "m5.2xlarge"
+}
+
+variable "client_machine_type" {
+  description = "Machine Type"
+  default     = "m5.2xlarge"
 }
 
 variable "root_volume_size" {

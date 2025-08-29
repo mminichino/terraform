@@ -36,6 +36,14 @@ variable "admin_password" {
   type = string
 }
 
+variable "redis_machine" {
+  type = string
+}
+
+variable "client_machine" {
+  type = string
+}
+
 module "redis-enterprise" {
   source = "./modules/redis"
   environment_name      = var.environment
@@ -47,4 +55,6 @@ module "redis-enterprise" {
   public_key_file       = var.public_key
   private_key_file      = var.private_key
   admin_password        = var.admin_password
+  redis_machine_type    = var.redis_machine
+  client_machine_type   = var.client_machine
 }
