@@ -29,6 +29,11 @@ variable "client_machine_type" {
   default     = "m5.2xlarge"
 }
 
+variable "rdi_machine_type" {
+  description = "Machine Type"
+  default     = "m5.2xlarge"
+}
+
 variable "root_volume_size" {
   description = "The root volume size"
   default     = 64
@@ -74,6 +79,11 @@ variable "client_count" {
   default     = 1
 }
 
+variable "rdi_node_count" {
+  description = "RDI node count"
+  default     = 0
+}
+
 variable "public_key_file" {
   description = "Public key file"
   type = string
@@ -112,5 +122,10 @@ variable "aws_session_token" {
 
 variable "redis_distribution" {
   description = "Redis Enterprise distribution tar file"
+  type = string
+}
+
+variable "rdi_distribution" {
+  description = "RDI distribution tar file"
   type = string
 }

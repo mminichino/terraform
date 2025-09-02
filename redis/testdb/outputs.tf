@@ -20,6 +20,16 @@ output "client_node_public_ips" {
   value       = module.redis-enterprise.client_public
 }
 
+output "rdi_node_private_ips" {
+  description = "Private IP addresses of RDI nodes"
+  value       = module.redis-enterprise.rdi_private
+}
+
+output "rdi_node_public_ips" {
+  description = "Public IP addresses of RDI nodes"
+  value       = module.redis-enterprise.rdi_public
+}
+
 output "redis_instance_hostnames" {
   description = "Generated hostnames for Redis instances"
   value       = module.redis-enterprise.instance_hostnames

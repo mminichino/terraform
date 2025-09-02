@@ -14,6 +14,14 @@ output "client_public" {
   value = [aws_instance.client_nodes.*.public_ip]
 }
 
+output "rdi_private" {
+  value = [aws_instance.rdi_nodes.*.private_ip]
+}
+
+output "rdi_public" {
+  value = [aws_instance.rdi_nodes.*.public_ip]
+}
+
 output "instance_hostnames" {
   description = "Generated hostnames for instances"
   value       = [for i in range(var.node_count) : "node${i + 1}.${random_string.env_key.id}.${var.parent_domain}"]

@@ -284,6 +284,36 @@ resource "aws_instance" "client_nodes" {
   }
 }
 
+resource "aws_instance" "rdi_nodes" {
+  count                       = var.rdi_node_count
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.rdi_machine_type
+  key_name                    = aws_key_pair.key_pair.key_name
+  vpc_security_group_ids      = [aws_security_group.client_sg.id]
+  subnet_id                   = aws_subnet.subnets[count.index % length(aws_subnet.subnets)].id
+  associate_public_ip_address = true
+  depends_on                  = [aws_route_table_association.public]
+
+  root_block_device {
+    volume_size = var.root_volume_size
+    volume_type = var.root_volume_type
+    iops        = var.root_volume_iops
+  }
+
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/rdi.sh", {
+    aws_access_key_id     = var.aws_access_key_id
+    aws_secret_access_key = var.aws_secret_access_key
+    aws_session_token     = var.aws_session_token
+    aws_region            = var.aws_region
+    dns_server            = local.vpc_dns_server
+    rdi_distribution      = var.rdi_distribution
+  }))
+
+  tags = {
+    Name = "${local.name_prefix}-rdi-${count.index + 1}"
+  }
+}
+
 resource "aws_route53_record" "host_records" {
   count   = var.node_count
   zone_id = data.aws_route53_zone.public_zone.zone_id
