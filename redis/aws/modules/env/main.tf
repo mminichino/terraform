@@ -10,6 +10,11 @@ resource "random_string" "env_key" {
   upper            = false
 }
 
+resource "random_string" "password" {
+  length           = 16
+  special          = false
+}
+
 locals {
   name_prefix = "${var.environment_name}-${random_string.env_key.id}"
 }

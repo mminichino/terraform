@@ -190,6 +190,7 @@ resource "null_resource" "create_cluster" {
       public_ips       = join(" ", aws_instance.redis_nodes[*].public_ip)
       node_azs         = join(" ", aws_instance.redis_nodes[*].availability_zone)
       environment_name = var.environment_name
+      admin_user       = var.admin_user
       admin_password   = var.admin_password
       dns_suffix       = "${var.environment_id}.${data.aws_route53_zone.public_zone.name}"
     })

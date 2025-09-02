@@ -24,10 +24,6 @@ variable "rdi" {
   type = string
 }
 
-variable "admin_password" {
-  type = string
-}
-
 variable "redis_machine" {
   type = string
 }
@@ -35,6 +31,11 @@ variable "redis_machine" {
 variable "redis_nodes" {
   type    = number
   default = 3
+}
+
+variable "admin_user" {
+  type    = string
+  default = "admin@redis.com"
 }
 
 variable "client_machine" {
@@ -81,12 +82,13 @@ module "redis" {
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
   aws_key_name          = module.environment.aws_ssh_key_name
+  admin_password        = module.environment.password
+  admin_user            = var.admin_user
   node_count            = var.redis_nodes
   parent_domain         = var.dns_domain
   ec2_instance_role     = var.ec2_role
   redis_distribution    = var.software
   private_key_file      = var.private_key
-  admin_password        = var.admin_password
   redis_machine_type    = var.redis_machine
 }
 

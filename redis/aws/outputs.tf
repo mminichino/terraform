@@ -46,5 +46,7 @@ output "environment_info" {
     environment = var.environment
     domain      = var.dns_domain
     vpc_id      = module.vpc.vpc_id
+    user        = var.admin_user
+    password    = module.environment.password
   }
 }

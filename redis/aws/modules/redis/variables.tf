@@ -95,9 +95,15 @@ variable "private_key_file" {
   type = string
 }
 
+variable "admin_user" {
+  description = "Redis admin username"
+  type        = string
+  default     = "admin@redis.com"
+}
+
 variable "admin_password" {
   description = "Redis admin password"
-  type = string
+  type        = string
 }
 
 variable "ec2_instance_role" {

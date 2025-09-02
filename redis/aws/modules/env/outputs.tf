@@ -19,3 +19,7 @@ output "aws_ssh_key_name" {
 output "aws_region" {
   value = var.aws_region
 }
+
+output "password" {
+  value = random_string.password.id
+}

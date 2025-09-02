@@ -130,7 +130,7 @@ if [ "$CURRENT_IP" = "$FIRST_NODE_IP" ]; then
         {\"name\": \"internal.${dns_suffix}\", \"use_internal_addr\": true}
     ],
     \"credentials\": {
-        \"username\": \"admin@redislabs.com\",
+        \"username\": \"${admin_user}\",
         \"password\": \"${admin_password}\"
     },
     \"license\": \"\"
