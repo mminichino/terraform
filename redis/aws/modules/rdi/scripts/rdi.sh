@@ -5,20 +5,10 @@ apt upgrade -y
 
 apt install -y wget curl gnupg2 software-properties-common awscli jq
 
-%{ if aws_access_key_id != null && aws_secret_access_key != null }
-mkdir -p /root/.aws
-cat > /root/.aws/credentials <<EOL
-[default]
-aws_access_key_id = ${aws_access_key_id}
-aws_secret_access_key = ${aws_secret_access_key}
-aws_session_token = ${aws_session_token}
-EOL
-
 cat > /root/.aws/config <<EOL
 [default]
 region = ${aws_region}
 EOL
-%{ endif }
 
 echo 'vm.overcommit_memory = 1' | sudo tee -a /etc/sysctl.conf
 echo 'net.core.somaxconn = 1024' | sudo tee -a /etc/sysctl.conf

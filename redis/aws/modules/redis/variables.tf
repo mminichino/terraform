@@ -1,8 +1,28 @@
 #
 
+variable "environment_id" {
+  description = "Environment id"
+  type = string
+}
+
+variable "environment_name" {
+  description = "Environment name"
+  type = string
+}
+
+variable "name_prefix" {
+  description = "Name prefix"
+  type = string
+}
+
 variable "aws_region" {
   description = "AWS region"
   default = "us-east-2"
+}
+
+variable "aws_vpc_id" {
+  description = "AWS VPC id"
+  type = string
 }
 
 variable "parent_domain" {
@@ -10,26 +30,22 @@ variable "parent_domain" {
   type = string
 }
 
-variable "environment_name" {
-  description = "Environment name"
+variable "aws_vpc_cidr" {
+  description = "VPC CIDR"
+  type = string
 }
 
-variable "cidr_block" {
-  description = "VPC CIDR"
-  default = "10.55.0.0/16"
+variable "aws_subnet_id_list" {
+  description = "Subnet id list"
+  type = list(string)
+}
+
+variable "aws_key_name" {
+  description = "AWS key name"
+  type = string
 }
 
 variable "redis_machine_type" {
-  description = "Machine Type"
-  default     = "m5.2xlarge"
-}
-
-variable "client_machine_type" {
-  description = "Machine Type"
-  default     = "m5.2xlarge"
-}
-
-variable "rdi_machine_type" {
   description = "Machine Type"
   default     = "m5.2xlarge"
 }
@@ -74,21 +90,6 @@ variable "node_count" {
   default     = 3
 }
 
-variable "client_count" {
-  description = "Client count"
-  default     = 1
-}
-
-variable "rdi_node_count" {
-  description = "RDI node count"
-  default     = 0
-}
-
-variable "public_key_file" {
-  description = "Public key file"
-  type = string
-}
-
 variable "private_key_file" {
   description = "Private key file"
   type = string
@@ -99,33 +100,12 @@ variable "admin_password" {
   type = string
 }
 
-variable "aws_access_key_id" {
-  description = "AWS Access Key ID"
+variable "ec2_instance_role" {
+  description = "AWS role with EC2 instance profile for S3 access"
   type        = string
-  sensitive   = true
-  default     = null
-}
-
-variable "aws_secret_access_key" {
-  description = "AWS Secret Access Key"
-  type        = string
-  sensitive   = true
-  default     = null
-}
-
-variable "aws_session_token" {
-  description = "AWS Session Token"
-  type        = string
-  sensitive   = true
-  default     = null
 }
 
 variable "redis_distribution" {
   description = "Redis Enterprise distribution tar file"
-  type = string
-}
-
-variable "rdi_distribution" {
-  description = "RDI distribution tar file"
   type = string
 }

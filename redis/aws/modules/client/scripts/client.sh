@@ -3,22 +3,29 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli jq
+apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip python3-dev cmake
 
-%{ if aws_access_key_id != null && aws_secret_access_key != null }
-mkdir -p /root/.aws
-cat > /root/.aws/credentials <<EOL
-[default]
-aws_access_key_id = ${aws_access_key_id}
-aws_secret_access_key = ${aws_secret_access_key}
-aws_session_token = ${aws_session_token}
-EOL
+snap install astral-uv --classic
+
+curl -OLs --output-dir /tmp https://github.com/asdf-vm/asdf/releases/download/v0.18.0/asdf-v0.18.0-linux-amd64.tar.gz
+tar xzvf /tmp/asdf-v0.18.0-linux-amd64.tar.gz -C /usr/local/bin
+rm /tmp/asdf-v0.18.0-linux-amd64.tar.gz
+
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+apt install -y nodejs
+npm install -g pm2
+
+curl -fsSL https://packages.redis.io/gpg | gpg --dearmor -o /usr/share/keyrings/redis-archive-keyring.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/redis-archive-keyring.gpg] https://packages.redis.io/deb $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/redis.list
+
+apt update
+apt install -y redis
 
 cat > /root/.aws/config <<EOL
 [default]
 region = ${aws_region}
 EOL
-%{ endif }
 
 echo 'vm.overcommit_memory = 1' | sudo tee -a /etc/sysctl.conf
 echo 'net.core.somaxconn = 1024' | sudo tee -a /etc/sysctl.conf
@@ -40,11 +47,6 @@ sleep 30
 sudo systemctl stop ufw
 sudo systemctl disable ufw
 
-mkdir /tmp/redis
-cd /tmp/redis || exit
-
-echo "Installing Redis Enterprise"
-
 echo "Disabling DNS stub listener"
 cat > /etc/systemd/resolved.conf << EOF
 [Resolve]
@@ -64,27 +66,6 @@ EOF
 
 chattr +i /etc/resolv.conf
 
-echo "Copying installation tar file"
-aws s3 cp s3://redis-enterprise-software/${redis_distribution} ./redis-enterprise.tar
-
-tar -xf redis-enterprise.tar
-
-if [ -f "install.sh" ]; then
-    echo "Running installation script"
-    ./install.sh -y
-else
-    echo "No recognized installation method found"
-    exit 1
-fi
-
-cd /
-rm -rf /tmp/redis
-
 CURRENT_IP=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
 echo "Current node IP: $CURRENT_IP"
 echo "$CURRENT_IP $(hostname)" | sudo tee -a /etc/hosts
-
-usermod -a -G redislabs ubuntu
-cat <<EOF >> /home/ubuntu/.bashrc
-export PATH=/opt/redislabs/bin:$PATH
-EOF
