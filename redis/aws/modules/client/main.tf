@@ -20,7 +20,14 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
+resource "random_string" "env_key" {
+  length           = 8
+  special          = false
+  upper            = false
+}
+
 locals {
+  name_prefix    = "${var.name}-${random_string.env_key.id}"
   vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
 }
 
@@ -29,7 +36,7 @@ data "aws_key_pair" "key_pair" {
 }
 
 resource "aws_security_group" "client_sg" {
-  name        = "${var.name_prefix}-client-sg"
+  name        = "${local.name_prefix}-client-sg"
   description = "Redis client node inbound traffic"
   vpc_id      = var.aws_vpc_id
 
@@ -56,8 +63,8 @@ resource "aws_security_group" "client_sg" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-client-sg"
-    Environment = var.environment_name
+    Name = "${local.name_prefix}-client-sg"
+    Environment = var.name
   }
 }
 
@@ -87,6 +94,6 @@ resource "aws_instance" "client_nodes" {
   }))
 
   tags = {
-    Name = "${var.name_prefix}-client-${count.index + 1}"
+    Name = "${local.name_prefix}-client-${count.index + 1}"
   }
 }

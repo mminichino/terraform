@@ -60,29 +60,22 @@ variable "ec2_role" {
   type = string
 }
 
-module "environment" {
-  source                = "./modules/env"
-  environment_name      = var.environment
+module "keypair" {
+  source                = "./modules/keypair"
   public_key_file       = var.public_key
 }
 
 module "vpc" {
   source                = "./modules/vpc"
-  name_prefix           = module.environment.name_prefix
-  aws_region            = module.environment.aws_region
 }
 
 module "redis" {
   source                = "./modules/redis"
-  environment_name      = module.environment.environment_name
-  environment_id        = module.environment.environment_id
-  name_prefix           = module.environment.name_prefix
-  aws_region            = module.environment.aws_region
+  aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.environment.aws_ssh_key_name
-  admin_password        = module.environment.password
+  aws_key_name          = module.keypair.aws_ssh_key_name
   admin_user            = var.admin_user
   node_count            = var.redis_nodes
   parent_domain         = var.dns_domain
@@ -94,13 +87,11 @@ module "redis" {
 
 module "client" {
   source                = "./modules/client"
-  environment_name      = module.environment.environment_name
-  name_prefix           = module.environment.name_prefix
-  aws_region            = module.environment.aws_region
+  aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.environment.aws_ssh_key_name
+  aws_key_name          = module.keypair.aws_ssh_key_name
   client_count          = var.client_nodes
   ec2_instance_role     = var.ec2_role
   client_machine_type   = var.client_machine
@@ -108,13 +99,11 @@ module "client" {
 
 module "rdi" {
   source                = "./modules/rdi"
-  environment_name      = module.environment.environment_name
-  name_prefix           = module.environment.name_prefix
-  aws_region            = module.environment.aws_region
+  aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.environment.aws_ssh_key_name
+  aws_key_name          = module.keypair.aws_ssh_key_name
   rdi_node_count        = var.rdi_nodes
   ec2_instance_role     = var.ec2_role
   rdi_machine_type      = var.rdi_machine

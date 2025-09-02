@@ -1,12 +1,13 @@
 #
 
-variable "name_prefix" {
-  description = "Name prefix"
-}
-
 variable "aws_region" {
   description = "AWS region"
   default = "us-east-2"
+}
+
+variable "aws_short_region" {
+  description = "AWS short region"
+  default = "use2"
 }
 
 variable "cidr_block" {

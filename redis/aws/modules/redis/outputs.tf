@@ -10,10 +10,14 @@ output "node_public" {
 
 output "instance_hostnames" {
   description = "Generated hostnames for instances"
-  value       = [for i in range(var.node_count) : "node${i + 1}.${var.environment_id}.${var.parent_domain}"]
+  value       = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${var.parent_domain}"]
 }
 
 output "redis_machine_type" {
   description = "Redis node AWS instance type"
   value = var.redis_machine_type
+}
+
+output "password" {
+  value = random_string.password.id
 }

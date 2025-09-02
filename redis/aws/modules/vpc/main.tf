@@ -4,8 +4,18 @@ provider "aws" {
   region = var.aws_region
 }
 
+resource "random_string" "env_key" {
+  length           = 8
+  special          = false
+  upper            = false
+}
+
 data "aws_availability_zones" "zones" {
   state = "available"
+}
+
+locals {
+  name_prefix = "${var.aws_short_region}-${random_string.env_key.id}"
 }
 
 resource "aws_vpc" "vpc" {
@@ -13,7 +23,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = "${var.name_prefix}-vpc"
+    Name = "${local.name_prefix}-vpc"
   }
 }
 
@@ -21,7 +31,7 @@ resource "aws_internet_gateway" "gateway" {
   vpc_id = aws_vpc.vpc.id
 
   tags = {
-    Name = "${var.name_prefix}-igw"
+    Name = "${local.name_prefix}-igw"
   }
 }
 
@@ -34,7 +44,7 @@ resource "aws_route_table" "default" {
   }
 
   tags = {
-    Name = "${var.name_prefix}-rt"
+    Name = "${local.name_prefix}-rt"
   }
 }
 
@@ -47,7 +57,7 @@ resource "aws_subnet" "subnets" {
   depends_on              = [aws_vpc.vpc]
 
   tags = {
-    Name = "${var.name_prefix}-subnet-${data.aws_availability_zones.zones.names[count.index]}"
+    Name = "${local.name_prefix}-subnet-${count.index + 1}"
     Type = "public"
   }
 }

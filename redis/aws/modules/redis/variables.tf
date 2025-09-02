@@ -1,18 +1,9 @@
 #
 
-variable "environment_id" {
-  description = "Environment id"
-  type = string
-}
-
-variable "environment_name" {
-  description = "Environment name"
-  type = string
-}
-
-variable "name_prefix" {
-  description = "Name prefix"
-  type = string
+variable "name" {
+  description = "Deployment name"
+  type        = string
+  default     = "redis"
 }
 
 variable "aws_region" {
@@ -99,11 +90,6 @@ variable "admin_user" {
   description = "Redis admin username"
   type        = string
   default     = "admin@redis.com"
-}
-
-variable "admin_password" {
-  description = "Redis admin password"
-  type        = string
 }
 
 variable "ec2_instance_role" {

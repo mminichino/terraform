@@ -1,13 +1,9 @@
 #
 
-variable "environment_name" {
-  description = "Environment name"
-  type = string
-}
-
-variable "name_prefix" {
-  description = "Name prefix"
-  type = string
+variable "name" {
+  description = "Deployment name"
+  type        = string
+  default     = "client"
 }
 
 variable "aws_region" {
