@@ -24,8 +24,13 @@ locals {
   vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
 }
 
-data "aws_key_pair" "key_pair" {
-  key_name = var.aws_key_name
+resource "aws_key_pair" "key_pair" {
+  key_name   = "${var.name}-key-pair"
+  public_key = file("~/.ssh/${var.public_key_file}")
+
+  tags = merge(var.tags, {
+    Name = "${var.name}-key-pair"
+  })
 }
 
 resource "aws_security_group" "client_sg" {

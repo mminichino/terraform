@@ -31,8 +31,8 @@ variable "aws_subnet_id_list" {
   type = list(string)
 }
 
-variable "aws_key_name" {
-  description = "AWS key name"
+variable "public_key_file" {
+  description = "Public key file"
   type = string
 }
 
