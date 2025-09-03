@@ -78,7 +78,6 @@ module "redis" {
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.keypair.aws_ssh_key_name
   admin_user            = var.admin_user
   node_count            = var.redis_nodes
   parent_domain         = var.dns_domain
@@ -86,6 +85,7 @@ module "redis" {
   redis_distribution    = var.software
   private_key_file      = var.private_key
   redis_machine_type    = var.redis_machine
+  public_key_file       = var.public_key
 }
 
 module "client" {
@@ -95,10 +95,10 @@ module "client" {
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.keypair.aws_ssh_key_name
   client_count          = var.client_nodes
   ec2_instance_role     = var.ec2_role
   client_machine_type   = var.client_machine
+  public_key_file       = var.public_key
 }
 
 module "rdi" {
@@ -108,9 +108,9 @@ module "rdi" {
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  aws_key_name          = module.keypair.aws_ssh_key_name
   rdi_node_count        = var.rdi_nodes
   ec2_instance_role     = var.ec2_role
   rdi_machine_type      = var.rdi_machine
   rdi_distribution      = var.rdi
+  public_key_file       = var.public_key
 }
