@@ -80,7 +80,7 @@ resource "aws_instance" "rdi_nodes" {
   count                       = var.rdi_node_count
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.rdi_machine_type
-  key_name                    = data.aws_key_pair.key_pair.key_name
+  key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.rdi_sg.id]
   subnet_id                   = var.aws_subnet_id_list[count.index % length(var.aws_subnet_id_list)]
   associate_public_ip_address = true
