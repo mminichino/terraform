@@ -9,11 +9,6 @@ variable "aws_region" {
   default = "us-east-2"
 }
 
-variable "aws_short_region" {
-  description = "AWS short region"
-  default = "use2"
-}
-
 variable "cidr_block" {
   description = "VPC CIDR"
   default = "10.55.0.0/16"
