@@ -60,12 +60,6 @@ variable "ec2_role" {
   type = string
 }
 
-module "keypair" {
-  source                = "./modules/keypair"
-  public_key_file       = var.public_key
-  name                  = "use2-demo"
-}
-
 module "vpc" {
   source                = "./modules/vpc"
   name                  = "use2-demo"
