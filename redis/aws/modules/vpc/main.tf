@@ -4,35 +4,26 @@ provider "aws" {
   region = var.aws_region
 }
 
-resource "random_string" "env_key" {
-  length           = 8
-  special          = false
-  upper            = false
-}
-
 data "aws_availability_zones" "zones" {
   state = "available"
-}
-
-locals {
-  name_prefix = "${var.aws_short_region}-${random_string.env_key.id}"
 }
 
 resource "aws_vpc" "vpc" {
   cidr_block           = var.cidr_block
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = {
-    Name = "${local.name_prefix}-vpc"
-  }
+
+  tags = merge(var.tags, {
+    Name = "${var.name}-vpc"
+  })
 }
 
 resource "aws_internet_gateway" "gateway" {
   vpc_id = aws_vpc.vpc.id
 
-  tags = {
-    Name = "${local.name_prefix}-igw"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.name}-igw"
+  })
 }
 
 resource "aws_route_table" "default" {
@@ -43,9 +34,9 @@ resource "aws_route_table" "default" {
     gateway_id = aws_internet_gateway.gateway.id
   }
 
-  tags = {
-    Name = "${local.name_prefix}-rt"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.name}-rt"
+  })
 }
 
 resource "aws_subnet" "subnets" {
@@ -56,10 +47,10 @@ resource "aws_subnet" "subnets" {
   map_public_ip_on_launch = true
   depends_on              = [aws_vpc.vpc]
 
-  tags = {
-    Name = "${local.name_prefix}-subnet-${count.index + 1}"
+  tags = merge(var.tags, {
+    Name = "${var.name}-subnet-${count.index + 1}"
     Type = "public"
-  }
+  })
 }
 
 resource "aws_route_table_association" "public" {

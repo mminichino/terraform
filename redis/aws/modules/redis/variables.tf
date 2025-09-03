@@ -101,3 +101,9 @@ variable "redis_distribution" {
   description = "Redis Enterprise distribution tar file"
   type = string
 }
+
+variable "tags" {
+  description = "Optional tags"
+  type        = map(string)
+  default     = {}
+}

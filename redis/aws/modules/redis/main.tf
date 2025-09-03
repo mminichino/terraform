@@ -36,7 +36,6 @@ data "aws_route53_zone" "public_zone" {
 }
 
 locals {
-  name_prefix    = "${var.name}-${random_string.env_key.id}"
   environment_id = random_string.env_key.id
   vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
 }
@@ -46,7 +45,7 @@ data "aws_key_pair" "key_pair" {
 }
 
 resource "aws_security_group" "redis_sg" {
-  name        = "${local.name_prefix}-redis-sg"
+  name        = "${var.name}-redis-sg"
   description = "Redis Enterprise inbound traffic"
   vpc_id      = var.aws_vpc_id
 
@@ -121,10 +120,9 @@ resource "aws_security_group" "redis_sg" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = {
-    Name = "${local.name_prefix}-redis-sg"
-    Environment = var.name
-  }
+  tags = merge(var.tags, {
+    Name = "${var.name}-redis-sg"
+  })
 }
 
 data "aws_iam_instance_profile" "ec2_s3_profile" {
@@ -161,9 +159,9 @@ resource "aws_instance" "redis_nodes" {
     dns_server            = local.vpc_dns_server
   }))
 
-  tags = {
-    Name = "${local.name_prefix}-host-${count.index + 1}"
-  }
+  tags = merge(var.tags, {
+    Name = "${var.name}-host-${count.index + 1}"
+  })
 }
 
 resource "aws_route53_record" "host_records" {

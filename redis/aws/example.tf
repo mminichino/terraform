@@ -63,14 +63,17 @@ variable "ec2_role" {
 module "keypair" {
   source                = "./modules/keypair"
   public_key_file       = var.public_key
+  name                  = "use2-demo"
 }
 
 module "vpc" {
   source                = "./modules/vpc"
+  name                  = "use2-demo"
 }
 
 module "redis" {
   source                = "./modules/redis"
+  name                  = "use2-demo-redis"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
@@ -87,6 +90,7 @@ module "redis" {
 
 module "client" {
   source                = "./modules/client"
+  name                  = "use2-demo-client"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
@@ -99,6 +103,7 @@ module "client" {
 
 module "rdi" {
   source                = "./modules/rdi"
+  name                  = "use2-demo-rdi"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
