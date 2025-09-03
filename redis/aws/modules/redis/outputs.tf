@@ -9,13 +9,19 @@ output "node_public" {
 }
 
 output "instance_hostnames" {
-  description = "Generated hostnames for instances"
   value       = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${var.parent_domain}"]
 }
 
+output "admin_urls" {
+  value       = [for i in range(var.node_count) : "https://node${i + 1}.${local.environment_id}.${var.parent_domain}:8443"]
+}
+
 output "redis_machine_type" {
-  description = "Redis node AWS instance type"
   value = var.redis_machine_type
+}
+
+output "admin_user" {
+  value = var.admin_user
 }
 
 output "password" {
