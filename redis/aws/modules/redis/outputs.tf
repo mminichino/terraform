@@ -9,11 +9,11 @@ output "node_public" {
 }
 
 output "instance_hostnames" {
-  value       = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${var.parent_domain}"]
+  value       = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${var.parent_domain}"]
 }
 
 output "admin_urls" {
-  value       = [for i in range(var.node_count) : "https://node${i + 1}.${local.environment_id}.${var.parent_domain}:8443"]
+  value       = [for i in range(var.node_count) : "https://node${i + 1}.${var.name}.${var.parent_domain}:8443"]
 }
 
 output "redis_machine_type" {

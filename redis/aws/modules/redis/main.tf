@@ -20,12 +20,6 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"]
 }
 
-resource "random_string" "env_key" {
-  length           = 8
-  special          = false
-  upper            = false
-}
-
 resource "random_string" "password" {
   length           = 16
   special          = false
@@ -36,7 +30,6 @@ data "aws_route53_zone" "public_zone" {
 }
 
 locals {
-  environment_id = random_string.env_key.id
   vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
 }
 
@@ -172,7 +165,7 @@ resource "aws_instance" "redis_nodes" {
 resource "aws_route53_record" "host_records" {
   count   = var.node_count
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = "node${count.index + 1}.${local.environment_id}"
+  name    = "node${count.index + 1}.${var.name}"
   type    = "A"
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].public_ip]
@@ -181,10 +174,10 @@ resource "aws_route53_record" "host_records" {
 
 resource "aws_route53_record" "ns_record" {
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = local.environment_id
+  name    = var.name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${local.environment_id}.${data.aws_route53_zone.public_zone.name}"]
+  records = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${data.aws_route53_zone.public_zone.name}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
@@ -208,7 +201,7 @@ resource "null_resource" "create_cluster" {
       environment_name = var.name
       admin_user       = var.admin_user
       admin_password   = random_string.password.id
-      dns_suffix       = "${local.environment_id}.${data.aws_route53_zone.public_zone.name}"
+      dns_suffix       = "${var.name}.${data.aws_route53_zone.public_zone.name}"
     })
     destination = "/tmp/setup_cluster.sh"
   }
