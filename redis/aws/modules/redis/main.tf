@@ -173,6 +173,7 @@ resource "aws_route53_record" "host_records" {
 }
 
 resource "aws_route53_record" "ns_record" {
+  count   = var.node_count > 0 ? 1 : 0
   zone_id = data.aws_route53_zone.public_zone.zone_id
   name    = var.name
   type    = "NS"
