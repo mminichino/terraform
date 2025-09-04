@@ -183,6 +183,8 @@ resource "aws_route53_record" "ns_record" {
 }
 
 resource "null_resource" "create_cluster" {
+  count = var.node_count > 0 ? 1 : 0
+
   triggers = {
     node_ips = join(" ", aws_instance.redis_nodes[*].public_ip)
   }
