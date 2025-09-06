@@ -10,6 +10,16 @@ output "redis_node_public_ips" {
   value       = module.redis.node_public
 }
 
+output "redis_dev_node_private_ips" {
+  description = "Private IP addresses of Redis nodes"
+  value       = module.redisdev.node_private
+}
+
+output "redis_dev_node_public_ips" {
+  description = "Public IP addresses of Redis nodes"
+  value       = module.redisdev.node_public
+}
+
 output "client_node_private_ips" {
   description = "Private IP addresses of Client nodes"
   value       = module.client.client_private
@@ -38,6 +48,23 @@ output "redis_instance_hostnames" {
 output "redis_admin_urls" {
   description = "Admin UI URLs for Redis Enterprise nodes"
   value       = [for hostname in module.redis.instance_hostnames : "https://${hostname}:8443"]
+}
+
+output "redis_dev_admin_urls" {
+  description = "Admin UI URLs for Redis Enterprise nodes"
+  value       = [for hostname in module.redisdev.instance_hostnames : "https://${hostname}:8443"]
+}
+
+output "dev_password" {
+  value = module.redisdev.password
+}
+
+output "dev_api_response" {
+  value = module.redisdev.response
+}
+
+output "dev_api_status_code" {
+  value = module.redisdev.status_code
 }
 
 output "environment_info" {

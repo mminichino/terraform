@@ -60,20 +60,58 @@ variable "ec2_role" {
   type = string
 }
 
+variable "deploy_redis" {
+  type = bool
+  default = false
+}
+
+variable "deploy_redis_dev" {
+  type = bool
+  default = true
+}
+
+variable "deploy_client" {
+  type = bool
+  default = false
+}
+
+variable "deploy_rdi" {
+  type = bool
+  default = false
+}
+
 module "vpc" {
   source                = "./modules/vpc"
-  name                  = "use2-demo"
+  name                  = "use2-dev"
+  cidr_block            = "10.99.0.0/16"
 }
 
 module "redis" {
   source                = "./modules/redis"
-  name                  = "use2-demo-redis"
+  name                  = "use2-dev-redis"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
   admin_user            = var.admin_user
-  node_count            = var.redis_nodes
+  node_count            = var.deploy_redis ? 3 : 0
+  parent_domain         = var.dns_domain
+  ec2_instance_role     = var.ec2_role
+  redis_distribution    = var.software
+  private_key_file      = var.private_key
+  redis_machine_type    = var.redis_machine
+  public_key_file       = var.public_key
+}
+
+module "redisdev" {
+  source                = "./modules/redisdev"
+  name                  = "use2-dev-redisdev"
+  aws_region            = module.vpc.aws_region
+  aws_subnet_id_list    = module.vpc.subnet_id_list
+  aws_vpc_cidr          = module.vpc.vpc_cidr
+  aws_vpc_id            = module.vpc.vpc_id
+  admin_user            = var.admin_user
+  node_count            = var.deploy_redis_dev ? 3 : 0
   parent_domain         = var.dns_domain
   ec2_instance_role     = var.ec2_role
   redis_distribution    = var.software
@@ -84,12 +122,12 @@ module "redis" {
 
 module "client" {
   source                = "./modules/client"
-  name                  = "use2-demo-client"
+  name                  = "use2-dev-client"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  client_count          = var.client_nodes
+  client_count          = var.deploy_client ? 1 : 0
   ec2_instance_role     = var.ec2_role
   client_machine_type   = var.client_machine
   public_key_file       = var.public_key
@@ -97,12 +135,12 @@ module "client" {
 
 module "rdi" {
   source                = "./modules/rdi"
-  name                  = "use2-demo-rdi"
+  name                  = "use2-dev-rdi"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  rdi_node_count        = var.rdi_nodes
+  rdi_node_count        = var.deploy_rdi ? 1 : 0
   ec2_instance_role     = var.ec2_role
   rdi_machine_type      = var.rdi_machine
   rdi_distribution      = var.rdi
