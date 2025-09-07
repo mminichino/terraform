@@ -127,6 +127,10 @@ data "aws_iam_instance_profile" "ec2_s3_profile" {
   name = var.ec2_instance_role
 }
 
+locals {
+  cluster_domain = "${var.name}.${data.aws_route53_zone.public_zone.name}"
+}
+
 resource "aws_instance" "redis_nodes" {
   count                       = var.node_count
   ami                         = data.aws_ami.ubuntu.id
@@ -157,6 +161,19 @@ resource "aws_instance" "redis_nodes" {
     dns_server            = local.vpc_dns_server
   }))
 
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = aws_instance.redis_nodes[0].public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait > /dev/null 2>&1",
+    ]
+  }
+
   tags = merge(var.tags, {
     Name = "${var.name}-host-${count.index + 1}"
   })
@@ -178,186 +195,250 @@ resource "aws_route53_record" "ns_record" {
   name    = var.name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${data.aws_route53_zone.public_zone.name}"]
+  records = [for i in range(var.node_count) : "node${i + 1}.${local.cluster_domain}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
-locals {
-  env_domain = "${var.name}.${data.aws_route53_zone.public_zone.name}"
-}
-
-data "http" "wait_for_api" {
+resource "null_resource" "create_cluster" {
   count = var.node_count > 0 ? 1 : 0
 
-  url    = "https://${aws_instance.redis_nodes[0].public_ip}:8443"
-  method = "GET"
-  insecure = true
-
-  retry {
-    attempts = 300
-    min_delay_ms = 1000
-    max_delay_ms = 1000
+  triggers = {
+    node_ip = aws_instance.redis_nodes[0].public_ip
   }
 
-  depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record]
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = aws_instance.redis_nodes[0].public_ip
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/scripts/create_cluster.sh", {
+      cluster_name = var.name
+      domain_name  = local.cluster_domain
+      admin_user   = var.admin_user
+      password     = random_string.password.id
+    })
+    destination = "/tmp/create_cluster.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/create_cluster.sh",
+      "/tmp/create_cluster.sh"
+    ]
+  }
+
+  depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record, aws_route53_record.host_records]
 }
 
-resource "null_resource" "pause" {
-  provisioner "local-exec" {
-    command = "sleep 15"
-  }
-  depends_on = [data.http.wait_for_api]
-}
-
-data "http" "primary_node" {
-  count = var.node_count > 0 ? 1 : 0
-
-  url    = "https://${aws_instance.redis_nodes[0].public_ip}:9443/v1/bootstrap/create_cluster"
-  method = "POST"
-  insecure = true
-
-  request_headers = {
-    Content-Type = "application/json"
-  }
-
-  retry {
-    attempts = 120
-    min_delay_ms = 500
-    max_delay_ms = 1000
-  }
-
-  request_body = jsonencode({
-    action = "create_cluster",
-    cluster = {
-      name = var.name,
-      nodes = []
-    },
-    node = {
-      bigstore_enabled = true,
-      paths = {
-        persistent_path = "/data/persistent",
-        ephemeral_path  = "/data/temp",
-        bigstore_path   = "/data/flash"
-      },
-      identity = {
-        addr    = aws_instance.redis_nodes[0].private_ip,
-        external_addr = [
-          aws_instance.redis_nodes[0].public_ip
-        ],
-        rack_id = aws_instance.redis_nodes[0].availability_zone
-      }
-    },
-    policy = {
-      rack_aware = true
-    },
-    dns_suffixes = [
-      {
-        name = local.env_domain,
-        cluster_default = true
-      },
-      {
-        name = "internal.${local.env_domain}",
-        use_internal_addr = true
-      }
-    ],
-    credentials = {
-      username = var.admin_user,
-      password = random_string.password.id
-    },
-    license = ""
-  })
-
-  depends_on = [aws_instance.redis_nodes, null_resource.pause]
-}
-
-resource "null_resource" "wait" {
-  provisioner "local-exec" {
-    command = "sleep 30"
-  }
-  depends_on = [data.http.primary_node]
-}
-
-data "http" "secondary_nodes" {
+resource "null_resource" "join_cluster" {
   count = max(0, var.node_count - 1)
 
-  url    = "https://${aws_instance.redis_nodes[count.index + 1].public_ip}:9443/v1/bootstrap/join_cluster"
-  method = "POST"
-  insecure = true
-
-  request_headers = {
-    Content-Type = "application/json"
-  }
-
-  retry {
-    attempts = 120
-    min_delay_ms = 500
-    max_delay_ms = 1000
-  }
-
-  request_body = jsonencode({
-    action = "join_cluster",
-    cluster = {
-      nodes = [aws_instance.redis_nodes[0].private_ip]
-    },
-    node = {
-      bigstore_enabled = true,
-      paths = {
-        persistent_path = "/data/persistent",
-        ephemeral_path  = "/data/temp",
-        bigstore_path   = "/data/flash"
-      },
-      identity = {
-        addr    = aws_instance.redis_nodes[count.index + 1].private_ip,
-        external_addr = [
-          aws_instance.redis_nodes[count.index + 1].public_ip
-        ],
-        rack_id = aws_instance.redis_nodes[count.index + 1].availability_zone
-      }
-    },
-    policy = {
-      rack_aware = true
-    },
-    credentials = {
-      username = var.admin_user,
-      password = random_string.password.id
-    }
-  })
-
-  depends_on = [data.http.primary_node, null_resource.wait]
-}
-
-resource "null_resource" "validate_primary" {
-  count = var.node_count > 0 ? 1 : 0
-
   triggers = {
-    primary_status = data.http.primary_node[0].status_code
-    validation_time = timestamp()
+    node_ip = aws_instance.redis_nodes[count.index + 1].public_ip
   }
 
-  lifecycle {
-    precondition {
-      condition     = data.http.primary_node[0].status_code == 200
-      error_message = "Primary failed with status: ${data.http.primary_node[0].status_code}: ${data.http.primary_node[0].response_body}"
-    }
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = aws_instance.redis_nodes[count.index + 1].public_ip
   }
 
-  depends_on = [data.http.primary_node]
+  provisioner "file" {
+    content = templatefile("${path.module}/scripts/join_cluster.sh", {
+      primary_node = aws_instance.redis_nodes[0].private_ip
+      domain_name  = local.cluster_domain
+      admin_user   = var.admin_user
+      password     = random_string.password.id
+    })
+    destination = "/tmp/join_cluster.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/join_cluster.sh",
+      "/tmp/join_cluster.sh"
+    ]
+  }
+
+  depends_on = [aws_instance.redis_nodes, null_resource.create_cluster]
 }
 
-resource "null_resource" "validate_secondary" {
-  count = length(data.http.secondary_nodes)
-
-  triggers = {
-    secondary_status = data.http.secondary_nodes[count.index].status_code
-    validation_time = timestamp()
-  }
-
-  lifecycle {
-    precondition {
-      condition     = data.http.secondary_nodes[count.index].status_code == 200
-      error_message = "Node ${count.index + 2} notification failed with status: ${data.http.secondary_nodes[count.index].status_code}: ${data.http.secondary_nodes[count.index].response_body}"
-    }
-  }
-
-  depends_on = [data.http.secondary_nodes]
-}
+# data "http" "wait_for_api" {
+#   count = var.node_count > 0 ? 1 : 0
+#
+#   url    = "https://${aws_instance.redis_nodes[0].public_ip}:8443"
+#   method = "GET"
+#   insecure = true
+#
+#   retry {
+#     attempts = 300
+#     min_delay_ms = 1000
+#     max_delay_ms = 1000
+#   }
+#
+#   depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record]
+# }
+#
+# resource "null_resource" "pause" {
+#   provisioner "local-exec" {
+#     command = "sleep 15"
+#   }
+#   depends_on = [data.http.wait_for_api]
+# }
+#
+# data "http" "primary_node" {
+#   count = var.node_count > 0 ? 1 : 0
+#
+#   url    = "https://${aws_instance.redis_nodes[0].public_ip}:9443/v1/bootstrap/create_cluster"
+#   method = "POST"
+#   insecure = true
+#
+#   request_headers = {
+#     Content-Type = "application/json"
+#   }
+#
+#   retry {
+#     attempts = 120
+#     min_delay_ms = 500
+#     max_delay_ms = 1000
+#   }
+#
+#   request_body = jsonencode({
+#     action = "create_cluster",
+#     cluster = {
+#       name = var.name,
+#       nodes = []
+#     },
+#     node = {
+#       bigstore_enabled = true,
+#       paths = {
+#         persistent_path = "/data/persistent",
+#         ephemeral_path  = "/data/temp",
+#         bigstore_path   = "/data/flash"
+#       },
+#       identity = {
+#         addr    = aws_instance.redis_nodes[0].private_ip,
+#         external_addr = [
+#           aws_instance.redis_nodes[0].public_ip
+#         ],
+#         rack_id = aws_instance.redis_nodes[0].availability_zone
+#       }
+#     },
+#     policy = {
+#       rack_aware = true
+#     },
+#     dns_suffixes = [
+#       {
+#         name = local.env_domain,
+#         cluster_default = true
+#       },
+#       {
+#         name = "internal.${local.env_domain}",
+#         use_internal_addr = true
+#       }
+#     ],
+#     credentials = {
+#       username = var.admin_user,
+#       password = random_string.password.id
+#     },
+#     license = ""
+#   })
+#
+#   depends_on = [aws_instance.redis_nodes, null_resource.pause]
+# }
+#
+# resource "null_resource" "wait" {
+#   provisioner "local-exec" {
+#     command = "sleep 30"
+#   }
+#   depends_on = [data.http.primary_node]
+# }
+#
+# data "http" "secondary_nodes" {
+#   count = max(0, var.node_count - 1)
+#
+#   url    = "https://${aws_instance.redis_nodes[count.index + 1].public_ip}:9443/v1/bootstrap/join_cluster"
+#   method = "POST"
+#   insecure = true
+#
+#   request_headers = {
+#     Content-Type = "application/json"
+#   }
+#
+#   retry {
+#     attempts = 120
+#     min_delay_ms = 500
+#     max_delay_ms = 1000
+#   }
+#
+#   request_body = jsonencode({
+#     action = "join_cluster",
+#     cluster = {
+#       nodes = [aws_instance.redis_nodes[0].private_ip]
+#     },
+#     node = {
+#       bigstore_enabled = true,
+#       paths = {
+#         persistent_path = "/data/persistent",
+#         ephemeral_path  = "/data/temp",
+#         bigstore_path   = "/data/flash"
+#       },
+#       identity = {
+#         addr    = aws_instance.redis_nodes[count.index + 1].private_ip,
+#         external_addr = [
+#           aws_instance.redis_nodes[count.index + 1].public_ip
+#         ],
+#         rack_id = aws_instance.redis_nodes[count.index + 1].availability_zone
+#       }
+#     },
+#     policy = {
+#       rack_aware = true
+#     },
+#     credentials = {
+#       username = var.admin_user,
+#       password = random_string.password.id
+#     }
+#   })
+#
+#   depends_on = [data.http.primary_node, null_resource.wait]
+# }
+#
+# resource "null_resource" "validate_primary" {
+#   count = var.node_count > 0 ? 1 : 0
+#
+#   triggers = {
+#     primary_status = data.http.primary_node[0].status_code
+#     validation_time = timestamp()
+#   }
+#
+#   lifecycle {
+#     precondition {
+#       condition     = data.http.primary_node[0].status_code == 200
+#       error_message = "Primary failed with status: ${data.http.primary_node[0].status_code}: ${data.http.primary_node[0].response_body}"
+#     }
+#   }
+#
+#   depends_on = [data.http.primary_node]
+# }
+#
+# resource "null_resource" "validate_secondary" {
+#   count = length(data.http.secondary_nodes)
+#
+#   triggers = {
+#     secondary_status = data.http.secondary_nodes[count.index].status_code
+#     validation_time = timestamp()
+#   }
+#
+#   lifecycle {
+#     precondition {
+#       condition     = data.http.secondary_nodes[count.index].status_code == 200
+#       error_message = "Node ${count.index + 2} notification failed with status: ${data.http.secondary_nodes[count.index].status_code}: ${data.http.secondary_nodes[count.index].response_body}"
+#     }
+#   }
+#
+#   depends_on = [data.http.secondary_nodes]
+# }

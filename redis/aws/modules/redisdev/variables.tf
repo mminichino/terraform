@@ -81,6 +81,11 @@ variable "node_count" {
   default     = 3
 }
 
+variable "private_key_file" {
+  description = "Private key file"
+  type = string
+}
+
 variable "admin_user" {
   description = "Redis admin username"
   type        = string

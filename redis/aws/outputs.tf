@@ -59,14 +59,6 @@ output "dev_password" {
   value = module.redisdev.password
 }
 
-output "dev_api_response" {
-  value = module.redisdev.response
-}
-
-output "dev_api_status_code" {
-  value = module.redisdev.status_code
-}
-
 output "environment_info" {
   description = "Environment information"
   value = {

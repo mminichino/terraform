@@ -27,11 +27,3 @@ output "admin_user" {
 output "password" {
   value = random_string.password.id
 }
-
-output "response" {
-  value = data.http.primary_node[0].response_body
-}
-
-output "status_code" {
-  value = data.http.primary_node[0].status_code
-}
