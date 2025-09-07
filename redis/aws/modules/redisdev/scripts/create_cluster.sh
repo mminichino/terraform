@@ -9,7 +9,7 @@ echo "Current node IP: $private_ip"
 echo "Current node public IP: $public_ip"
 echo "Current node availability zone: $availability_zone"
 
-cat <<EOF | curl -k -s -o - -I -H "Content-type: application/json" -X POST --data-binary @- https://localhost:9443/v1/bootstrap/create_cluster
+cat <<EOF | curl -k -s -w "Status: %%{http_code}\n" -H "Content-type: application/json" -X POST --data-binary @- https://localhost:9443/v1/bootstrap/create_cluster
 {
     "action": "create_cluster",
     "cluster": {
