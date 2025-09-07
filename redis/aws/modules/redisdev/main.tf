@@ -165,7 +165,7 @@ resource "aws_instance" "redis_nodes" {
     type        = "ssh"
     user        = "ubuntu"
     private_key = file("~/.ssh/${var.private_key_file}")
-    host        = aws_instance.redis_nodes[0].public_ip
+    host        = self.public_ip
   }
 
   provisioner "remote-exec" {
@@ -203,7 +203,7 @@ resource "null_resource" "create_cluster" {
   count = var.node_count > 0 ? 1 : 0
 
   triggers = {
-    node_ip = aws_instance.redis_nodes[0].public_ip
+    node_ids = join(",", aws_instance.redis_nodes.*.id)
   }
 
   connection {
@@ -230,14 +230,14 @@ resource "null_resource" "create_cluster" {
     ]
   }
 
-  depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record, aws_route53_record.host_records]
+  depends_on = [aws_route53_record.ns_record, aws_route53_record.host_records]
 }
 
 resource "null_resource" "join_cluster" {
   count = max(0, var.node_count - 1)
 
   triggers = {
-    node_ip = aws_instance.redis_nodes[count.index + 1].public_ip
+    node_id = aws_instance.redis_nodes[count.index + 1].id
   }
 
   connection {
@@ -264,7 +264,7 @@ resource "null_resource" "join_cluster" {
     ]
   }
 
-  depends_on = [aws_instance.redis_nodes, null_resource.create_cluster]
+  depends_on = [null_resource.create_cluster]
 }
 
 # data "http" "wait_for_api" {
