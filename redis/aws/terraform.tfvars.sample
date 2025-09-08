@@ -11,3 +11,5 @@ client_machine = "m5.2xlarge"
 client_nodes   = 1
 rdi_machine    = "m5.2xlarge"
 rdi_nodes      = 1
+rdbms_machine  = "m5.2xlarge"
+rdbms_nodes    = 1

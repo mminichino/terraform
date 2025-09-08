@@ -3,7 +3,7 @@
 variable "name" {
   description = "Deployment name"
   type        = string
-  default     = "redis"
+  default     = "rdbms"
 }
 
 variable "aws_region" {
@@ -13,11 +13,6 @@ variable "aws_region" {
 
 variable "aws_vpc_id" {
   description = "AWS VPC id"
-  type = string
-}
-
-variable "parent_domain" {
-  description = "Parent DNS domain"
   type = string
 }
 
@@ -36,7 +31,7 @@ variable "public_key_file" {
   type = string
 }
 
-variable "redis_machine_type" {
+variable "machine_type" {
   description = "Machine Type"
   default     = "m5.2xlarge"
 }
@@ -78,28 +73,12 @@ variable "data_volume_size" {
 
 variable "node_count" {
   description = "Node count"
-  default     = 3
-}
-
-variable "private_key_file" {
-  description = "Private key file"
-  type = string
-}
-
-variable "admin_user" {
-  description = "Redis admin username"
-  type        = string
-  default     = "admin@redis.com"
+  default     = 1
 }
 
 variable "ec2_instance_role" {
   description = "AWS role with EC2 instance profile for S3 access"
   type        = string
-}
-
-variable "redis_distribution" {
-  description = "Redis Enterprise distribution tar file"
-  type = string
 }
 
 variable "tags" {

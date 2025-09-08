@@ -199,6 +199,12 @@ resource "aws_route53_record" "ns_record" {
   depends_on = [aws_instance.redis_nodes]
 }
 
+locals {
+  primary_node_private_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].private_ip : null
+  primary_node_public_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].public_ip : null
+  api_public_base_url = var.node_count > 0 ? "https://${aws_instance.redis_nodes[0].public_ip}:9443" : null
+}
+
 resource "null_resource" "create_cluster" {
   count = var.node_count > 0 ? 1 : 0
 

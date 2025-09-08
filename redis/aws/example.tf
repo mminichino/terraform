@@ -56,16 +56,24 @@ variable "rdi_nodes" {
   default = 0
 }
 
+variable "rdbms_machine" {
+  type = string
+}
+
+variable "rdbms_nodes" {
+  type = number
+}
+
 variable "ec2_role" {
   type = string
 }
 
 variable "deploy_redis" {
   type = bool
-  default = true
+  default = false
 }
 
-variable "deploy_redis_dev" {
+variable "deploy_rdbms" {
   type = bool
   default = false
 }
@@ -103,29 +111,26 @@ module "redis" {
   public_key_file       = var.public_key
 }
 
-module "redisdev" {
-  source                = "./modules/redisdev"
-  name                  = "use2-dev-redisdev"
+module "rdbms" {
+  source                = "./modules/rdbms"
+  name                  = "use2-dev-rdbms"
   aws_region            = module.vpc.aws_region
   aws_subnet_id_list    = module.vpc.subnet_id_list
   aws_vpc_cidr          = module.vpc.vpc_cidr
   aws_vpc_id            = module.vpc.vpc_id
-  admin_user            = var.admin_user
-  node_count            = var.deploy_redis_dev ? 3 : 0
-  parent_domain         = var.dns_domain
+  node_count            = var.deploy_rdbms ? 1 : 0
   ec2_instance_role     = var.ec2_role
-  redis_distribution    = var.software
-  private_key_file      = var.private_key
-  redis_machine_type    = var.redis_machine
+  machine_type          = var.rdbms_machine
   public_key_file       = var.public_key
 }
 
 module "database" {
+  count                 = var.deploy_redis ? 1 : 0
   source                = "./modules/database"
   password              = module.redis.password
   username              = module.redis.admin_user
   private_key_file      = var.private_key
-  public_ip             = module.redis.primary_node_public
+  public_ip             = module.redis.primary_node_public_ip
   depends_on            = [module.redis]
 }
 
