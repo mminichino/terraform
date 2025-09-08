@@ -62,12 +62,12 @@ variable "ec2_role" {
 
 variable "deploy_redis" {
   type = bool
-  default = false
+  default = true
 }
 
 variable "deploy_redis_dev" {
   type = bool
-  default = true
+  default = false
 }
 
 variable "deploy_client" {
@@ -118,6 +118,15 @@ module "redisdev" {
   private_key_file      = var.private_key
   redis_machine_type    = var.redis_machine
   public_key_file       = var.public_key
+}
+
+module "database" {
+  source                = "./modules/database"
+  password              = module.redis.password
+  username              = module.redis.admin_user
+  private_key_file      = var.private_key
+  public_ip             = module.redis.primary_node_public
+  depends_on            = [module.redis]
 }
 
 module "client" {

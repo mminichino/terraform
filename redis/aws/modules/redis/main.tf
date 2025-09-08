@@ -127,6 +127,10 @@ data "aws_iam_instance_profile" "ec2_s3_profile" {
   name = var.ec2_instance_role
 }
 
+locals {
+  cluster_domain = "${var.name}.${data.aws_route53_zone.public_zone.name}"
+}
+
 resource "aws_instance" "redis_nodes" {
   count                       = var.node_count
   ami                         = data.aws_ami.ubuntu.id
@@ -157,6 +161,19 @@ resource "aws_instance" "redis_nodes" {
     dns_server            = local.vpc_dns_server
   }))
 
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = self.public_ip
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait > /dev/null 2>&1",
+    ]
+  }
+
   tags = merge(var.tags, {
     Name = "${var.name}-host-${count.index + 1}"
   })
@@ -178,7 +195,7 @@ resource "aws_route53_record" "ns_record" {
   name    = var.name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${data.aws_route53_zone.public_zone.name}"]
+  records = [for i in range(var.node_count) : "node${i + 1}.${local.cluster_domain}"]
   depends_on = [aws_instance.redis_nodes]
 }
 
@@ -186,7 +203,7 @@ resource "null_resource" "create_cluster" {
   count = var.node_count > 0 ? 1 : 0
 
   triggers = {
-    node_ips = join(" ", aws_instance.redis_nodes[*].public_ip)
+    node_ids = join(",", aws_instance.redis_nodes.*.id)
   }
 
   connection {
@@ -197,29 +214,55 @@ resource "null_resource" "create_cluster" {
   }
 
   provisioner "file" {
-    content = templatefile("${path.module}/scripts/setup_cluster.sh", {
-      node_ips         = join(" ", aws_instance.redis_nodes[*].private_ip)
-      public_ips       = join(" ", aws_instance.redis_nodes[*].public_ip)
-      node_azs         = join(" ", aws_instance.redis_nodes[*].availability_zone)
-      environment_name = var.name
-      admin_user       = var.admin_user
-      admin_password   = random_string.password.id
-      dns_suffix       = "${var.name}.${data.aws_route53_zone.public_zone.name}"
+    content = templatefile("${path.module}/scripts/create_cluster.sh", {
+      cluster_name = var.name
+      domain_name  = local.cluster_domain
+      admin_user   = var.admin_user
+      password     = random_string.password.id
     })
-    destination = "/tmp/setup_cluster.sh"
-  }
-
-  provisioner "file" {
-    source      = "${path.module}/scripts/ebsnvme.py"
-    destination = "/tmp/ebsnvme.py"
+    destination = "/tmp/create_cluster.sh"
   }
 
   provisioner "remote-exec" {
     inline = [
-      "chmod +x /tmp/setup_cluster.sh",
-      "/tmp/setup_cluster.sh"
+      "chmod +x /tmp/create_cluster.sh",
+      "/tmp/create_cluster.sh"
     ]
   }
 
-  depends_on = [aws_instance.redis_nodes, aws_route53_record.ns_record, aws_route53_record.host_records]
+  depends_on = [aws_route53_record.ns_record, aws_route53_record.host_records]
+}
+
+resource "null_resource" "join_cluster" {
+  count = max(0, var.node_count - 1)
+
+  triggers = {
+    node_id = aws_instance.redis_nodes[count.index + 1].id
+  }
+
+  connection {
+    type        = "ssh"
+    user        = "ubuntu"
+    private_key = file("~/.ssh/${var.private_key_file}")
+    host        = aws_instance.redis_nodes[count.index + 1].public_ip
+  }
+
+  provisioner "file" {
+    content = templatefile("${path.module}/scripts/join_cluster.sh", {
+      primary_node = aws_instance.redis_nodes[0].private_ip
+      domain_name  = local.cluster_domain
+      admin_user   = var.admin_user
+      password     = random_string.password.id
+    })
+    destination = "/tmp/join_cluster.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/join_cluster.sh",
+      "/tmp/join_cluster.sh"
+    ]
+  }
+
+  depends_on = [null_resource.create_cluster]
 }

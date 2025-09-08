@@ -16,6 +16,18 @@ output "admin_urls" {
   value       = [for i in range(var.node_count) : "https://node${i + 1}.${var.name}.${var.parent_domain}:8443"]
 }
 
+output "primary_node_public" {
+  value = aws_instance.redis_nodes[0].public_ip
+}
+
+output "primary_node_private" {
+  value = aws_instance.redis_nodes[0].private_ip
+}
+
+output "api_base_public" {
+  value = "https://${aws_instance.redis_nodes[0].public_ip}:9443"
+}
+
 output "redis_machine_type" {
   value = var.redis_machine_type
 }
