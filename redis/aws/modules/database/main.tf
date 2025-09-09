@@ -1,17 +1,24 @@
 #
 
+resource "random_string" "password" {
+  length           = 16
+  special          = false
+}
+
 locals {
   data_json = jsonencode({
-    uid              = var.uid
-    memory_size      = var.memory_size
-    name             = var.name
-    port             = var.port
-    proxy_policy     = "all-master-shards"
-    shards_count     = 1
-    type             = "redis"
-    data_persistence = "aof"
-    aof_policy       = "appendfsync-every-sec"
-    replication      = var.replication
+    uid                       = var.uid
+    memory_size               = var.memory_size
+    name                      = var.name
+    port                      = var.port
+    proxy_policy              = "all-master-shards"
+    shards_count              = 1
+    type                      = "redis"
+    data_persistence          = "aof"
+    aof_policy                = "appendfsync-every-sec"
+    replication               = var.replication
+    eviction_policy           = var.eviction ? "volatile-lru" : "noeviction"
+    authentication_redis_pass = random_string.password.id
     module_list      = [
       {
         module_name = "search"

@@ -40,3 +40,8 @@ variable "replication" {
   type    = bool
   default = false
 }
+
+variable "eviction" {
+  type    = bool
+  default = false
+}
