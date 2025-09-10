@@ -1,0 +1,5 @@
+project         = "project-name-12345"
+region          = "us-central1"
+credential_file = "/Users/name/.config/gcloud/project-name-12345-1a2b3c4d.json"
+name            = "demo"
+public_key      = "key-name.pub"

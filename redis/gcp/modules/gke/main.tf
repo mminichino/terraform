@@ -1,0 +1,70 @@
+#
+
+provider "google" {
+  credentials = file(var.credential_file)
+  project     = var.gcp_project_id
+  region      = var.gcp_region
+}
+
+data "google_container_engine_versions" "gke_version" {
+  location = var.gcp_region
+}
+
+data "google_client_openid_userinfo" "current" {}
+
+locals {
+  cluster_name = "${var.name}-gke"
+}
+
+resource "google_container_cluster" "kubernetes" {
+  name                     = local.cluster_name
+  location                 = var.gcp_region
+  network                  = var.network_name
+  subnetwork               = var.subnet_name
+  remove_default_node_pool = true
+  initial_node_count       = 1
+  deletion_protection      = false
+
+  dns_config {
+    cluster_dns = "CLOUD_DNS"
+    additive_vpc_scope_dns_domain = "${local.cluster_name}.internal"
+  }
+
+  addons_config {
+    gce_persistent_disk_csi_driver_config {
+      enabled = true
+    }
+  }
+
+  resource_labels = merge(var.labels, {
+    name       = local.cluster_name
+    managed_by = "terraform"
+  })
+}
+
+locals {
+  node_pool_name = "${var.name}-node-pool"
+}
+
+resource "google_container_node_pool" "worker_nodes" {
+  name       = local.node_pool_name
+  location   = var.gcp_region
+  cluster    = google_container_cluster.kubernetes.name
+
+  version = data.google_container_engine_versions.gke_version.release_channel_default_version["REGULAR"]
+  node_count = var.node_count
+
+  node_config {
+    service_account = data.google_client_openid_userinfo.current.email
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform"
+    ]
+
+    labels = merge(var.labels, {
+      name       = local.node_pool_name
+      managed_by = "terraform"
+    })
+
+    machine_type = var.machine_type
+  }
+}
