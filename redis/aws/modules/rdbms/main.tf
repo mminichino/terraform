@@ -181,6 +181,14 @@ resource "aws_instance" "rdbms_nodes" {
     throughput  = var.data_volume_throughput
   }
 
+  ebs_block_device {
+    device_name = "/dev/sdd"
+    volume_type = "gp3"
+    volume_size = var.data_volume_size
+    iops        = var.data_volume_iops
+    throughput  = var.data_volume_throughput
+  }
+
   user_data_base64 = base64encode(file("${path.module}/scripts/cloud_init.sh"))
 
   tags = merge(var.tags, {
