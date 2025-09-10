@@ -86,3 +86,14 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "image" {
+  description = "Image selection"
+  type        = string
+  default     = "ubuntu"
+
+  validation {
+    condition     = contains(["ubuntu", "ol", "centos"], var.image)
+    error_message = "The image must be 'ubuntu', 'ol', or 'centos'"
+  }
+}

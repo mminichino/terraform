@@ -12,12 +12,12 @@ output "redis_node_public_ips" {
 
 output "rdbms_private_ips" {
   description = "Private IP addresses of Redis nodes"
-  value       = module.rdbms.node_private
+  value       = module.rdbms.rdbms_node_private
 }
 
 output "rdbms_public_ips" {
   description = "Public IP addresses of Redis nodes"
-  value       = module.rdbms.node_public
+  value       = module.rdbms.rdbms_node_public
 }
 
 output "client_node_private_ips" {

@@ -4,6 +4,22 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["099720109477"]
+}
+
 data "aws_ami" "centos" {
   most_recent = true
 
@@ -22,11 +38,31 @@ data "aws_ami" "centos" {
     values = ["hvm"]
   }
 
-  owners = ["125523088429"] # AWS Marketplace
+  owners = ["125523088429"]
+}
+
+data "aws_ami" "ol" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["OL8.9-x86_64-HVM-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["131827586825"]
 }
 
 locals {
-  vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
+  aws_image = {
+    ubuntu = data.aws_ami.ubuntu.id
+    centos = data.aws_ami.centos.id
+    ol     = data.aws_ami.ol.id
+  }
 }
 
 resource "aws_key_pair" "key_pair" {
@@ -115,7 +151,7 @@ data "aws_ec2_instance_type" "instance_type" {
 
 resource "aws_instance" "rdbms_nodes" {
   count                       = var.node_count
-  ami                         = data.aws_ami.centos.id
+  ami                         = local.aws_image[var.image]
   instance_type               = var.machine_type
   key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.rdbms_sg.id]
@@ -145,10 +181,7 @@ resource "aws_instance" "rdbms_nodes" {
     throughput  = var.data_volume_throughput
   }
 
-  user_data_base64 = base64encode(templatefile("${path.module}/scripts/cloud_init.sh", {
-    aws_region            = var.aws_region
-    dns_server            = local.vpc_dns_server
-  }))
+  user_data_base64 = base64encode(file("${path.module}/scripts/cloud_init.sh"))
 
   tags = merge(var.tags, {
     Name = "${var.name}-rdbms-${count.index + 1}"

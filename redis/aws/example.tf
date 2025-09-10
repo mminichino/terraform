@@ -122,6 +122,7 @@ module "rdbms" {
   ec2_instance_role     = var.ec2_role
   machine_type          = var.rdbms_machine
   public_key_file       = var.public_key
+  image                 = "ol"
 }
 
 module "database" {
