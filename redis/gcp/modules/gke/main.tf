@@ -25,11 +25,6 @@ resource "google_container_cluster" "kubernetes" {
   initial_node_count       = 1
   deletion_protection      = false
 
-  dns_config {
-    cluster_dns = "CLOUD_DNS"
-    additive_vpc_scope_dns_domain = "${local.cluster_name}.internal"
-  }
-
   addons_config {
     gce_persistent_disk_csi_driver_config {
       enabled = true
