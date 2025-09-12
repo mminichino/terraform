@@ -33,13 +33,19 @@ variable "subnet_name" {
 variable "node_count" {
   description = "The number of nodes in the GKE cluster's node pool."
   type        = number
-  default     = 2
+  default     = 1
+}
+
+variable "max_node_count" {
+  description = "The max number of nodes per zone."
+  type        = number
+  default     = 3
 }
 
 variable "machine_type" {
   description = "The machine type for the GKE nodes."
   type        = string
-  default     = "n2-standard-8"
+  default     = "n2-standard-16"
 }
 
 variable "labels" {
