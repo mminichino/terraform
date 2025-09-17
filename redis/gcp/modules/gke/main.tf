@@ -198,7 +198,7 @@ resource "helm_release" "cert_manager" {
     }
   ]
 
-  depends_on = [google_dns_record_set.subdomain_ns_delegation]
+  depends_on = [helm_release.external_dns]
 }
 
 resource "helm_release" "nginx_ingress" {
@@ -208,7 +208,7 @@ resource "helm_release" "nginx_ingress" {
   chart            = "ingress-nginx"
   create_namespace = true
 
-  depends_on = [helm_release.external_dns]
+  depends_on = [helm_release.cert_manager]
 }
 
 resource "helm_release" "prometheus" {
