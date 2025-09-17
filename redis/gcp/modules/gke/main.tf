@@ -183,6 +183,24 @@ resource "helm_release" "external_dns" {
   depends_on = [google_dns_record_set.subdomain_ns_delegation]
 }
 
+resource "helm_release" "cert_manager" {
+  name             = "cert-manager"
+  namespace        = "cert-manager"
+  repository       = "https://charts.jetstack.io"
+  chart            = "cert-manager"
+  version          = "v1.18.2"
+  create_namespace = true
+
+  set = [
+    {
+      name  = "crds.enabled"
+      value = true
+    }
+  ]
+
+  depends_on = [google_dns_record_set.subdomain_ns_delegation]
+}
+
 resource "helm_release" "nginx_ingress" {
   name             = "ingress-nginx"
   namespace        = "ingress-nginx"
