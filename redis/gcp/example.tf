@@ -44,6 +44,15 @@ module "gke" {
   gcp_zone_name         = var.gke_domain
 }
 
+module "rec" {
+  source                 = "./modules/rec"
+  cluster_ca_certificate = module.gke.cluster_ca_certificate
+  domain_name            = module.gke.cluster_domain
+  kubernetes_endpoint    = module.gke.cluster_endpoint_url
+  kubernetes_token       = module.gke.access_token
+  storage_class          = module.gke.storage_class
+}
+
 module "client" {
   source                = "./modules/client"
   name                  = "usc1-${var.name}"

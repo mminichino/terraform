@@ -36,6 +36,10 @@ output "cluster_ca_certificate" {
   value = base64decode(google_container_cluster.kubernetes.master_auth[0].cluster_ca_certificate)
 }
 
+output "storage_class" {
+  value = var.storage_class_name
+}
+
 output "grafana_admin_password" {
   value = random_string.grafana_password.id
 }

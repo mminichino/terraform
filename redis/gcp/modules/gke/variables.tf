@@ -52,6 +52,11 @@ variable "gcp_zone_name" {
   type = string
 }
 
+variable "storage_class_name" {
+  type = string
+  default = "premium-rwo"
+}
+
 variable "labels" {
   description = "A map of labels to assign to the resources."
   type        = map(string)
