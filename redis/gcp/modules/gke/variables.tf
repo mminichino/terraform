@@ -48,6 +48,10 @@ variable "machine_type" {
   default     = "n2-standard-16"
 }
 
+variable "gcp_zone_name" {
+  type = string
+}
+
 variable "labels" {
   description = "A map of labels to assign to the resources."
   type        = map(string)

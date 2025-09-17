@@ -5,9 +5,17 @@ output "cluster_name" {
   value       = google_container_cluster.kubernetes.name
 }
 
+output "cluster_domain" {
+  value = local.cluster_domain
+}
+
 output "cluster_endpoint" {
   description = "The endpoint of the GKE cluster's control plane."
   value       = google_container_cluster.kubernetes.endpoint
+}
+
+output "cluster_endpoint_url" {
+  value = "https://${google_container_cluster.kubernetes.endpoint}"
 }
 
 output "node_pool_name" {
@@ -18,4 +26,16 @@ output "node_pool_name" {
 output "kubernetes_cluster_host" {
   value       = google_container_cluster.kubernetes.endpoint
   description = "GKE Cluster Host"
+}
+
+output "access_token" {
+  value = data.google_client_config.provider.access_token
+}
+
+output "cluster_ca_certificate" {
+  value = base64decode(google_container_cluster.kubernetes.master_auth[0].cluster_ca_certificate)
+}
+
+output "grafana_admin_password" {
+  value = random_string.grafana_password.id
 }

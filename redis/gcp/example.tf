@@ -16,6 +16,10 @@ variable "region" {
   type = string
 }
 
+variable "gke_domain" {
+  type = string
+}
+
 variable "public_key" {
   type = string
 }
@@ -37,6 +41,7 @@ module "gke" {
   gcp_region            = var.region
   network_name          = module.vpc.vpc_name
   subnet_name           = module.vpc.subnet_name
+  gcp_zone_name         = var.gke_domain
 }
 
 module "client" {

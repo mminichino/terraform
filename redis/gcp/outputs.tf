@@ -9,3 +9,8 @@ output "client_node_public_ips" {
   description = "Public IP addresses of Client nodes"
   value       = module.client.client_public_ips
 }
+
+output "grafana_admin_password" {
+  description = "Grafana admin password"
+  value       = module.gke.grafana_admin_password
+}
