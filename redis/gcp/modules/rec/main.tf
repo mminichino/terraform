@@ -64,29 +64,10 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-provider "helm" {
-  kubernetes = {
-    host                   = var.kubernetes_endpoint
-    token                  = var.kubernetes_token
-    cluster_ca_certificate = var.cluster_ca_certificate
-  }
-}
-
 provider "kubernetes" {
   host                   = var.kubernetes_endpoint
   token                  = var.kubernetes_token
   cluster_ca_certificate = var.cluster_ca_certificate
-}
-
-resource "helm_release" "redis_operator" {
-  name             = "redis"
-  namespace        = var.namespace
-  repository       = "https://helm.redis.io"
-  chart            = "redis-enterprise-operator"
-  version          = "7.22.0-17"
-  create_namespace = true
-
-  depends_on = [tls_locally_signed_cert.server]
 }
 
 resource "kubernetes_secret_v1" "proxy_cert_secret" {
@@ -101,8 +82,6 @@ resource "kubernetes_secret_v1" "proxy_cert_secret" {
     key         = base64encode(tls_private_key.server.private_key_pem)
     name        = "cHJveHk="
   }
-
-  depends_on = [helm_release.redis_operator]
 }
 
 resource "kubernetes_manifest" "redis_cluster" {
