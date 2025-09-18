@@ -111,7 +111,7 @@ resource "kubernetes_manifest" "redis_cluster" {
     kind       = "RedisEnterpriseCluster"
 
     metadata = {
-      name = "redis-enterprise-cluster"
+      name = var.name
       namespace = var.namespace
       labels = {
         app = "redis"
@@ -169,7 +169,7 @@ resource "kubernetes_manifest" "cluster_ui" {
     apiVersion = "networking.k8s.io/v1"
     kind       = "Ingress"
     metadata = {
-      name      = "redis-enterprise-cluster-ui"
+      name      = "${var.name}-ui"
       namespace = var.namespace
       annotations = {
         "kubernetes.io/ingress.class"                  = "nginx"
@@ -187,7 +187,7 @@ resource "kubernetes_manifest" "cluster_ui" {
             pathType = "ImplementationSpecific"
             backend = {
               service = {
-                name = "redis-enterprise-cluster-ui"
+                name = "${var.name}-ui"
                 port = {
                   number = 8443
                 }
@@ -234,4 +234,12 @@ resource "kubernetes_manifest" "monitoring" {
   }
 
   depends_on = [kubernetes_manifest.cluster_ui]
+}
+
+data "kubernetes_secret_v1" "redis_cluster_secret" {
+  metadata {
+    name = var.name
+    namespace = var.namespace
+  }
+  depends_on = [kubernetes_manifest.redis_cluster]
 }

@@ -53,6 +53,15 @@ module "rec" {
   storage_class          = module.gke.storage_class
 }
 
+module "redb" {
+  source                 = "./modules/redb"
+  cluster_ca_certificate = module.gke.cluster_ca_certificate
+  kubernetes_endpoint    = module.gke.cluster_endpoint_url
+  kubernetes_token       = module.gke.access_token
+  name                   = "redb1"
+  cluster                = module.rec.cluster
+}
+
 module "client" {
   source                = "./modules/client"
   name                  = "usc1-${var.name}"

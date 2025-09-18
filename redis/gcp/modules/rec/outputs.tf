@@ -12,3 +12,12 @@ output "server_private_key_pem" {
 output "ca_certificate_pem" {
   value = tls_self_signed_cert.ca.cert_pem
 }
+
+output "cluster" {
+  value = var.name
+}
+
+output "cluster_password" {
+  value     = data.kubernetes_secret_v1.redis_cluster_secret.data["password"]
+  sensitive = true
+}

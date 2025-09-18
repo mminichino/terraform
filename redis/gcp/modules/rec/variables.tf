@@ -21,6 +21,11 @@ variable "namespace" {
   default = "redis"
 }
 
+variable "name" {
+  type = string
+  default = "redis-enterprise-cluster"
+}
+
 variable "cpu" {
   type = string
   default = "4"

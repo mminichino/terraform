@@ -14,3 +14,14 @@ output "grafana_admin_password" {
   description = "Grafana admin password"
   value       = module.gke.grafana_admin_password
 }
+
+output "database_password" {
+  description = "Redis Database password"
+  value       = module.redb.database_password
+}
+
+output "cluster_password" {
+  description = "Redis Cluster password"
+  value       = module.rec.cluster_password
+  sensitive   = true
+}
