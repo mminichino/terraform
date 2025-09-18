@@ -1,5 +1,6 @@
 #
 
 output "database_password" {
-  value = random_string.password.id
+  value     = random_string.password.id
+  sensitive = true
 }

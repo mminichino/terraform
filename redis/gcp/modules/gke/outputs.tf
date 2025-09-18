@@ -33,7 +33,8 @@ output "kubernetes_cluster_host" {
 }
 
 output "access_token" {
-  value = data.google_client_config.provider.access_token
+  value     = data.google_client_config.provider.access_token
+  sensitive = true
 }
 
 output "cluster_ca_certificate" {
