@@ -21,6 +21,10 @@ variable "namespace" {
   default = "redis"
 }
 
+variable "domain_name" {
+  type = string
+}
+
 variable "cluster" {
   type = string
   default = "redis-enterprise-cluster"

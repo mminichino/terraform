@@ -68,6 +68,7 @@ module "redb" {
   kubernetes_endpoint    = module.gke.cluster_endpoint_url
   kubernetes_token       = module.gke.access_token
   name                   = "redb1"
+  domain_name            = module.gke.cluster_domain
   cluster                = module.rec.cluster
 }
 
