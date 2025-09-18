@@ -161,6 +161,13 @@ resource "kubernetes_manifest" "redis_cluster" {
     }
   }
 
+  wait {
+    fields = {
+      "status.state" = "Running"
+      "status.persistenceStatus.status" = "Provisioned"
+    }
+  }
+
   depends_on = [kubernetes_secret_v1.proxy_cert_secret]
 }
 
@@ -241,5 +248,5 @@ data "kubernetes_secret_v1" "redis_cluster_secret" {
     name = var.name
     namespace = var.namespace
   }
-  depends_on = [kubernetes_manifest.redis_cluster]
+  depends_on = [kubernetes_manifest.monitoring]
 }
