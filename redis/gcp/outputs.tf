@@ -12,7 +12,7 @@ output "client_node_public_ips" {
 
 output "grafana_admin_password" {
   description = "Grafana admin password"
-  value       = module.gke.grafana_admin_password
+  value       = module.gkecfg.grafana_admin_password
 }
 
 output "database_password" {

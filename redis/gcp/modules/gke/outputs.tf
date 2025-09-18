@@ -18,6 +18,10 @@ output "cluster_endpoint_url" {
   value = "https://${google_container_cluster.kubernetes.endpoint}"
 }
 
+output "cluster_sa_email" {
+  value = data.google_client_openid_userinfo.current.email
+}
+
 output "node_pool_name" {
   description = "The name of the GKE cluster's node pool."
   value       = google_container_node_pool.worker_nodes.name
@@ -38,8 +42,4 @@ output "cluster_ca_certificate" {
 
 output "storage_class" {
   value = var.storage_class_name
-}
-
-output "grafana_admin_password" {
-  value = random_string.grafana_password.id
 }
