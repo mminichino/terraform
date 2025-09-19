@@ -84,22 +84,7 @@ resource "helm_release" "nginx_ingress" {
   chart            = "ingress-nginx"
   create_namespace = true
 
-  set = [
-    {
-      name  = "controller.extraArgs.tcp-services-configmap"
-      value = "ingress-nginx/tcp-services"
-    }
-  ]
-
   depends_on = [helm_release.cert_manager]
-}
-
-resource "kubernetes_config_map_v1" "tcp_services" {
-  metadata {
-    name      = "tcp-services"
-    namespace = "ingress-nginx"
-  }
-  depends_on = [helm_release.nginx_ingress]
 }
 
 resource "helm_release" "prometheus" {

@@ -64,8 +64,4 @@ resource "helm_release" "redis_database" {
       value = var.modules
     }
   ]
-
-  provisioner "local-exec" {
-    command = "kubectl patch configmap tcp-services --namespace ingress-nginx --type merge --patch '{\"data\":{\"${var.port}\":\"${var.namespace}/${var.name}:${var.port}\"}}'"
-  }
 }
