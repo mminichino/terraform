@@ -81,7 +81,7 @@ resource "kubernetes_manifest" "redis_port" {
       namespace = "ingress-nginx"
     }
     data = {
-      var.port = "${var.namespace}/${var.name}:${var.port}"
+      tostring(var.port) = "${var.namespace}/${var.name}:${var.port}"
     }
   }
 
