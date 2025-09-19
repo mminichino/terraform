@@ -72,39 +72,21 @@ provider "kubernetes" {
   cluster_ca_certificate = var.cluster_ca_certificate
 }
 
-resource "kubernetes_manifest" "database" {
+resource "kubernetes_manifest" "redis_port" {
   manifest = {
-    apiVersion = "networking.k8s.io/v1"
-    kind       = "Ingress"
+    apiVersion = "v1"
+    kind       = "ConfigMap"
     metadata = {
-      name      = var.name
-      namespace = var.namespace
-      annotations = {
-        "kubernetes.io/ingress.class"                  = "nginx"
-        "nginx.ingress.kubernetes.io/ssl-passthrough"  = "true"
-      }
+      name      = "tcp-services"
+      namespace = "ingress-nginx"
     }
-
-    spec = {
-      rules = [{
-        host = "${var.name}.${var.domain_name}"
-        http = {
-          paths = [{
-            path = "/"
-            pathType = "ImplementationSpecific"
-            backend = {
-              service = {
-                name = var.name
-                port = {
-                  number = var.port
-                }
-              }
-            }
-          }]
-        }
-      }]
+    data = {
+      var.port = "${var.namespace}/${var.name}:${var.port}"
     }
   }
 
-  depends_on = [helm_release.redis_database]
+  field_manager {
+    name            = "terraform"
+    force_conflicts = false
+  }
 }
