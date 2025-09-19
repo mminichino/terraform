@@ -16,6 +16,20 @@ variable "cluster_ca_certificate" {
   type = string
 }
 
+variable "credential_file" {
+  type = string
+}
+
+variable "gcp_project_id" {
+  description = "The GCP project ID."
+  type        = string
+}
+
+variable "gcp_region" {
+  description = "The GCP region for the GKE cluster."
+  type        = string
+}
+
 variable "namespace" {
   type    = string
   default = "redis"

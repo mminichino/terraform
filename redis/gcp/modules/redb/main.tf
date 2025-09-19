@@ -80,6 +80,12 @@ data "kubernetes_service_v1" "nginx_ingress" {
   }
 }
 
+provider "google" {
+  credentials = file(var.credential_file)
+  project     = var.gcp_project_id
+  region      = var.gcp_region
+}
+
 resource "google_dns_record_set" "db_record" {
   name = "${var.name}.${var.domain_name}."
   managed_zone = replace(var.domain_name, ".", "-")
