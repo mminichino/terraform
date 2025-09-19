@@ -18,6 +18,7 @@ resource "helm_release" "redis_database" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-database"
+  cleanup_on_fail  = true
 
   set = [
     {
@@ -64,4 +65,25 @@ resource "helm_release" "redis_database" {
       value = var.modules
     }
   ]
+}
+
+provider "kubernetes" {
+  host                   = var.kubernetes_endpoint
+  token                  = var.kubernetes_token
+  cluster_ca_certificate = var.cluster_ca_certificate
+}
+
+data "kubernetes_service_v1" "nginx_ingress" {
+  metadata {
+    name      = "ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+}
+
+resource "google_dns_record_set" "db_record" {
+  name = "${var.name}.${var.domain_name}."
+  managed_zone = replace(var.domain_name, ".", "-")
+  type = "A"
+  ttl = 300
+  rrdatas = [data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip]
 }
