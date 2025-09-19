@@ -84,6 +84,25 @@ resource "helm_release" "nginx_ingress" {
   chart            = "ingress-nginx"
   create_namespace = true
 
+  set = [
+    {
+      name  = "tcp.12000"
+      value = "redis/redb1:12000"
+    },
+    {
+      name  = "tcp.12001"
+      value = "redis/redb2:12001"
+    },
+    {
+      name  = "tcp.12002"
+      value = "redis/redb3:12002"
+    },
+    {
+      name  = "tcp.12003"
+      value = "redis/redb4:12003"
+    }
+  ]
+
   depends_on = [helm_release.cert_manager]
 }
 
