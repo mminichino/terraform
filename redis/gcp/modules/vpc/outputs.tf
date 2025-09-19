@@ -17,3 +17,13 @@ output "subnet_self_link" {
   description = "The self_link of the subnetwork."
   value       = google_compute_subnetwork.subnetwork.self_link
 }
+
+output "gcp_project_id" {
+  description = "GCP VPC project ID"
+  value       = var.gcp_project_id
+}
+
+output "gcp_region" {
+  description = "GCP VPC region"
+  value       = var.gcp_region
+}

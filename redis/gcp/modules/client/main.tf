@@ -1,11 +1,5 @@
 #
 
-provider "google" {
-  credentials = file(var.credential_file)
-  project     = var.gcp_project_id
-  region      = var.gcp_region
-}
-
 data "google_compute_image" "ubuntu" {
   family  = "ubuntu-2204-lts"
   project = "ubuntu-os-cloud"

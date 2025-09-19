@@ -1,11 +1,5 @@
 #
 
-provider "google" {
-  credentials = file(var.credential_file)
-  project     = var.gcp_project_id
-  region      = var.gcp_region
-}
-
 data "google_container_engine_versions" "gke_version" {
   location = var.gcp_region
 }

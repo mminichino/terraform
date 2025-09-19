@@ -1,8 +1,4 @@
-provider "google" {
-  credentials = file(var.credential_file)
-  project     = var.gcp_project_id
-  region      = var.gcp_region
-}
+#
 
 resource "google_compute_network" "vpc" {
   name                    = var.name

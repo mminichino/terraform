@@ -1,16 +1,7 @@
 #
 
-variable "credential_file" {
-  type = string
-}
-
 variable "name" {
   description = "Name of the client deployment"
-  type        = string
-}
-
-variable "gcp_project_id" {
-  description = "GCP Project ID"
   type        = string
 }
 

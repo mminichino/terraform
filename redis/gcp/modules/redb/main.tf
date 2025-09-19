@@ -1,13 +1,5 @@
 #
 
-provider "helm" {
-  kubernetes = {
-    host                   = var.kubernetes_endpoint
-    token                  = var.kubernetes_token
-    cluster_ca_certificate = var.cluster_ca_certificate
-  }
-}
-
 resource "random_string" "password" {
   length           = 8
   special          = false
@@ -67,29 +59,14 @@ resource "helm_release" "redis_database" {
   ]
 }
 
-provider "kubernetes" {
-  host                   = var.kubernetes_endpoint
-  token                  = var.kubernetes_token
-  cluster_ca_certificate = var.cluster_ca_certificate
-}
-
-data "kubernetes_service_v1" "nginx_ingress" {
-  metadata {
-    name      = "ingress-nginx-controller"
-    namespace = "ingress-nginx"
-  }
-}
-
-provider "google" {
-  credentials = file(var.credential_file)
-  project     = var.gcp_project_id
-  region      = var.gcp_region
+locals {
+  redis_db_hostname = "${var.name}.${var.domain_name}"
 }
 
 resource "google_dns_record_set" "db_record" {
-  name = "${var.name}.${var.domain_name}."
+  name = "${local.redis_db_hostname}."
   managed_zone = replace(var.domain_name, ".", "-")
   type = "A"
   ttl = 300
-  rrdatas = [data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip]
+  rrdatas = [var.nginx_ingress_ip]
 }

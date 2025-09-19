@@ -1,9 +1,5 @@
 #
 
-variable "credential_file" {
-  type = string
-}
-
 variable "name" {
   description = "The name of the VPC."
   type        = string

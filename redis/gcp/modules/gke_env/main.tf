@@ -1,22 +1,14 @@
 #
 
+data "google_client_openid_userinfo" "current" {}
+
+locals {
+  sa_email = data.google_client_openid_userinfo.current.email
+}
+
 resource "random_string" "grafana_password" {
   length           = 8
   special          = false
-}
-
-provider "helm" {
-  kubernetes = {
-    host                   = var.kubernetes_endpoint
-    token                  = var.kubernetes_token
-    cluster_ca_certificate = var.cluster_ca_certificate
-  }
-}
-
-provider "kubernetes" {
-  host                   = var.kubernetes_endpoint
-  token                  = var.kubernetes_token
-  cluster_ca_certificate = var.cluster_ca_certificate
 }
 
 resource "kubernetes_cluster_role_binding_v1" "admin" {
@@ -32,7 +24,7 @@ resource "kubernetes_cluster_role_binding_v1" "admin" {
 
   subject {
     kind     = "User"
-    name     = var.service_account_email
+    name     = local.sa_email
     api_group = "rbac.authorization.k8s.io"
   }
 }
@@ -43,18 +35,19 @@ resource "helm_release" "external_dns" {
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "external-dns-gke"
   create_namespace = true
+  cleanup_on_fail  = true
 
   set = [
     {
       name  = "googleServiceAccount"
-      value = var.service_account_email
+      value = local.sa_email
     }
   ]
 
   set_list = [
     {
       name  = "domainFilters"
-      value = [var.domain_name]
+      value = [var.gke_domain_name]
     }
   ]
 }
@@ -66,6 +59,7 @@ resource "helm_release" "cert_manager" {
   chart            = "cert-manager"
   version          = "v1.18.2"
   create_namespace = true
+  cleanup_on_fail  = true
 
   set = [
     {
@@ -83,6 +77,7 @@ resource "helm_release" "nginx_ingress" {
   repository       = "https://kubernetes.github.io/ingress-nginx"
   chart            = "ingress-nginx"
   create_namespace = true
+  cleanup_on_fail  = true
 
   set = [
     {
@@ -112,6 +107,7 @@ resource "helm_release" "prometheus" {
   repository       = "https://prometheus-community.github.io/helm-charts"
   chart            = "kube-prometheus-stack"
   create_namespace = true
+  cleanup_on_fail  = true
 
   set = [
     {
@@ -127,7 +123,7 @@ resource "helm_release" "prometheus" {
   set_list = [
     {
       name  = "grafana.ingress.hosts"
-      value = ["grafana.${var.domain_name}"]
+      value = ["grafana.${var.gke_domain_name}"]
     }
   ]
 
@@ -138,4 +134,17 @@ resource "helm_release" "prometheus" {
     }
   ]
   depends_on = [helm_release.nginx_ingress, kubernetes_cluster_role_binding_v1.admin]
+}
+
+data "kubernetes_service_v1" "nginx_ingress" {
+  metadata {
+    name      = "ingress-nginx-controller"
+    namespace = "ingress-nginx"
+  }
+  depends_on = [helm_release.prometheus]
+}
+
+# noinspection HILUnresolvedReference
+locals {
+  nginx_ingress_ip = data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip
 }

@@ -64,12 +64,6 @@ resource "tls_locally_signed_cert" "server" {
   ]
 }
 
-provider "kubernetes" {
-  host                   = var.kubernetes_endpoint
-  token                  = var.kubernetes_token
-  cluster_ca_certificate = var.cluster_ca_certificate
-}
-
 resource "kubernetes_secret_v1" "proxy_cert_secret" {
   metadata {
     name      = "proxy-cert-secret"

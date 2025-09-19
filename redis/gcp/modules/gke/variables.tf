@@ -1,9 +1,5 @@
 #
 
-variable "credential_file" {
-  type = string
-}
-
 variable "name" {
   description = "The name for the GKE cluster."
   type        = string

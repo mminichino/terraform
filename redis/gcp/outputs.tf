@@ -12,12 +12,14 @@ output "client_node_public_ips" {
 
 output "grafana_admin_password" {
   description = "Grafana admin password"
-  value       = module.gkecfg.grafana_admin_password
+  value       = module.gke_env.grafana_admin_password
+  sensitive   = true
 }
 
 output "database_password" {
   description = "Redis Database password"
   value       = module.redb.database_password
+  sensitive   = true
 }
 
 output "cluster_password" {
