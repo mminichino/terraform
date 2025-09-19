@@ -64,29 +64,8 @@ resource "helm_release" "redis_database" {
       value = var.modules
     }
   ]
-}
 
-provider "kubernetes" {
-  host                   = var.kubernetes_endpoint
-  token                  = var.kubernetes_token
-  cluster_ca_certificate = var.cluster_ca_certificate
-}
-
-resource "kubernetes_manifest" "redis_port" {
-  manifest = {
-    apiVersion = "v1"
-    kind       = "ConfigMap"
-    metadata = {
-      name      = "tcp-services"
-      namespace = "ingress-nginx"
-    }
-    data = {
-      tostring(var.port) = "${var.namespace}/${var.name}:${var.port}"
-    }
-  }
-
-  field_manager {
-    name            = "terraform"
-    force_conflicts = false
+  provisioner "local-exec" {
+    command = "kubectl patch configmap tcp-services --namespace ingress-nginx --type merge --patch '{\"data\":{\"${var.port}\":\"${var.namespace}/${var.name}:${var.port}\"}}'"
   }
 }
