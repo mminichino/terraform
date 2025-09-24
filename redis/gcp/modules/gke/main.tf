@@ -1,6 +1,7 @@
 #
 
 data "google_container_engine_versions" "gke_version" {
+  version_prefix = var.kubernetes_version
   location = var.gcp_region
 }
 

@@ -26,6 +26,11 @@ variable "subnet_name" {
   type        = string
 }
 
+variable "kubernetes_version" {
+  type = string
+  default = "1.33.4"
+}
+
 variable "node_count" {
   description = "The number of nodes in the GKE cluster's node pool."
   type        = number
