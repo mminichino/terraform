@@ -1,5 +1,9 @@
 #
 
+output "namespace" {
+  value = var.namespace
+}
+
 output "operator_version" {
-  value = helm_release.redis_operator.version
+  value = var.operator_version
 }
