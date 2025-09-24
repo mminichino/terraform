@@ -5,6 +5,6 @@ resource "helm_release" "redis_operator" {
   namespace        = var.namespace
   repository       = "https://helm.redis.io"
   chart            = "redis-enterprise-operator"
-  version          = "7.22.0-17"
+  version          = var.operator_version
   create_namespace = true
 }
