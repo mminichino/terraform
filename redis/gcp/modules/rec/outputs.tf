@@ -1,5 +1,9 @@
 #
 
+output "namespace" {
+  value = var.namespace
+}
+
 output "server_certificate_pem" {
   value = tls_locally_signed_cert.server.cert_pem
 }
