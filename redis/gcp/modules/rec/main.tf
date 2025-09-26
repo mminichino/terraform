@@ -78,6 +78,31 @@ resource "kubernetes_secret_v1" "proxy_cert_secret" {
   }
 }
 
+locals {
+  service_type = {
+    nginx = "ClusterIP"
+    lb    = "LoadBalancer"
+  }
+  database_service_type = {
+    nginx = "cluster_ip,headless"
+    lb    = "load_balancer,cluster_ip"
+  }
+  ingress_spec = {
+    nginx = {
+      ingressOrRouteSpec = {
+        apiFqdnUrl   = "redis-api.${var.domain_name}"
+        dbFqdnSuffix = var.domain_name
+        method       = "ingress"
+        ingressAnnotations = {
+          "kubernetes.io/ingress.class"                 = "nginx"
+          "nginx.ingress.kubernetes.io/ssl-passthrough" = "true"
+        }
+      }
+    }
+    lb    = {}
+  }
+}
+
 resource "kubernetes_manifest" "redis_cluster" {
   manifest = {
     apiVersion = "app.redislabs.com/v1"
@@ -91,7 +116,7 @@ resource "kubernetes_manifest" "redis_cluster" {
       }
     }
 
-    spec = {
+    spec = merge({
       redisEnterpriseNodeResources = {
         limits = {
           cpu = var.cpu
@@ -106,32 +131,25 @@ resource "kubernetes_manifest" "redis_cluster" {
       persistentSpec = {
         enabled = true
         storageClassName = var.storage_class
-        volumeSize = "20Gi"
+        volumeSize = var.volume_size
       }
       username = "demo@redis.com"
       certificates = {
         proxyCertificateSecretName = "proxy-cert-secret"
       }
-      ingressOrRouteSpec = {
-        apiFqdnUrl = "redis-api.${var.domain_name}"
-        dbFqdnSuffix = var.domain_name
-        method = "ingress"
-        ingressAnnotations = {
-          "kubernetes.io/ingress.class" = "nginx"
-          "nginx.ingress.kubernetes.io/ssl-passthrough" = "true"
-        }
-      }
-      uiServiceType = "ClusterIP"
+      uiServiceType = local.service_type[var.service_type]
       servicesRiggerSpec = {
-        databaseServiceType = "cluster_ip,headless"
+        databaseServiceType = local.database_service_type[var.service_type]
         serviceNaming = "bdb_name"
       }
       services = {
         apiService = {
-          type = "ClusterIP"
+          type = local.service_type[var.service_type]
         }
       }
-    }
+    },
+    length(local.ingress_spec[var.service_type]) != 0 ? local.ingress_spec[var.service_type] : {}
+    )
   }
 
   wait {
