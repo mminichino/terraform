@@ -24,6 +24,11 @@ variable "public_key" {
   type = string
 }
 
+variable "rec_service_type" {
+  type    = string
+  default = "nginx"
+}
+
 provider "google" {
   credentials = file(var.credential_file)
   project     = var.project
@@ -78,6 +83,7 @@ module "rec" {
   source                 = "./modules/rec"
   domain_name            = module.gke_env.gke_domain_name
   storage_class          = module.gke_env.gke_storage_class
+  service_type           = var.rec_service_type
   depends_on             = [module.operator]
 }
 
@@ -87,6 +93,7 @@ module "redb" {
   domain_name            = module.gke_env.gke_domain_name
   nginx_ingress_ip       = module.gke_env.nginx_ingress_ip
   cluster                = module.rec.cluster
+  ingress_enabled        = module.rec.ingress_enabled
   depends_on             = [module.rec]
 }
 

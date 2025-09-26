@@ -78,6 +78,35 @@ resource "kubernetes_secret_v1" "proxy_cert_secret" {
   }
 }
 
+locals {
+  service_type = {
+    nginx = "ClusterIP"
+    lb    = "LoadBalancer"
+  }
+
+  database_service_type = {
+    nginx = "cluster_ip,headless"
+    lb    = "load_balancer,cluster_ip"
+  }
+
+  ingress_spec = {
+    nginx = {
+      ingressOrRouteSpec = {
+        apiFqdnUrl   = "redis-api.${var.domain_name}"
+        dbFqdnSuffix = var.domain_name
+        method       = "ingress"
+        ingressAnnotations = {
+          "kubernetes.io/ingress.class"                 = "nginx"
+          "nginx.ingress.kubernetes.io/ssl-passthrough" = "true"
+        }
+      }
+    }
+    lb    = {}
+  }
+
+  ingress_enabled = length(local.ingress_spec[var.service_type]) != 0
+}
+
 resource "kubernetes_manifest" "redis_cluster" {
   manifest = {
     apiVersion = "app.redislabs.com/v1"
@@ -91,47 +120,40 @@ resource "kubernetes_manifest" "redis_cluster" {
       }
     }
 
-    spec = {
-      redisEnterpriseNodeResources = {
-        limits = {
-          cpu = var.cpu
-          memory = var.memory
+    spec = merge({
+        redisEnterpriseNodeResources = {
+          limits = {
+            cpu = var.cpu
+            memory = var.memory
+          }
+          requests = {
+            cpu = var.cpu
+            memory = var.memory
+          }
         }
-        requests = {
-          cpu = var.cpu
-          memory = var.memory
+        nodes = var.mode_count
+        persistentSpec = {
+          enabled = true
+          storageClassName = var.storage_class
+          volumeSize = var.volume_size
         }
-      }
-      nodes = var.mode_count
-      persistentSpec = {
-        enabled = true
-        storageClassName = var.storage_class
-        volumeSize = "20Gi"
-      }
-      username = "demo@redis.com"
-      certificates = {
-        proxyCertificateSecretName = "proxy-cert-secret"
-      }
-      ingressOrRouteSpec = {
-        apiFqdnUrl = "redis-api.${var.domain_name}"
-        dbFqdnSuffix = var.domain_name
-        method = "ingress"
-        ingressAnnotations = {
-          "kubernetes.io/ingress.class" = "nginx"
-          "nginx.ingress.kubernetes.io/ssl-passthrough" = "true"
+        username = "demo@redis.com"
+        certificates = {
+          proxyCertificateSecretName = "proxy-cert-secret"
         }
-      }
-      uiServiceType = "ClusterIP"
-      servicesRiggerSpec = {
-        databaseServiceType = "cluster_ip,headless"
-        serviceNaming = "bdb_name"
-      }
-      services = {
-        apiService = {
-          type = "ClusterIP"
+        uiServiceType = local.service_type[var.service_type]
+        servicesRiggerSpec = {
+          databaseServiceType = local.database_service_type[var.service_type]
+          serviceNaming = "bdb_name"
         }
-      }
-    }
+        services = {
+          apiService = {
+            type = local.service_type[var.service_type]
+          }
+        }
+      },
+      local.ingress_enabled ? local.ingress_spec[var.service_type] : {}
+    )
   }
 
   wait {
@@ -144,7 +166,14 @@ resource "kubernetes_manifest" "redis_cluster" {
   depends_on = [kubernetes_secret_v1.proxy_cert_secret]
 }
 
+locals {
+  redis_ui_dns_name = "redis-ui.${var.domain_name}"
+  redis_ui_url_port = local.ingress_enabled ? 443 : 8443
+  redis_ui_url = "https://${local.redis_ui_dns_name}:${local.redis_ui_url_port}"
+}
+
 resource "kubernetes_manifest" "cluster_ui" {
+  count = local.ingress_enabled ? 1 : 0
   manifest = {
     apiVersion = "networking.k8s.io/v1"
     kind       = "Ingress"
@@ -160,7 +189,7 @@ resource "kubernetes_manifest" "cluster_ui" {
 
     spec = {
       rules = [{
-        host = "redis-ui.${var.domain_name}"
+        host = local.redis_ui_dns_name
         http = {
           paths = [{
             path = "/"
@@ -180,6 +209,25 @@ resource "kubernetes_manifest" "cluster_ui" {
   }
 
   depends_on = [kubernetes_manifest.redis_cluster]
+}
+
+data "kubernetes_service_v1" "ui_lb_service" {
+  count = local.ingress_enabled ? 0 : 1
+  metadata {
+    name      = "${var.name}-ui"
+    namespace = var.namespace
+  }
+  depends_on = [kubernetes_manifest.redis_cluster]
+}
+
+resource "google_dns_record_set" "ui_record" {
+  count = local.ingress_enabled ? 0 : 1
+  name = "${local.redis_ui_dns_name}."
+  managed_zone = replace(var.domain_name, ".", "-")
+  type = "A"
+  ttl = 300
+  # noinspection HILUnresolvedReference
+  rrdatas = [data.kubernetes_service_v1.ui_lb_service.0.status.0.load_balancer.0.ingress.0.ip]
 }
 
 resource "kubernetes_manifest" "monitoring" {

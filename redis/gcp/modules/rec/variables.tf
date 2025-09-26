@@ -33,3 +33,19 @@ variable "storage_class" {
   type    = string
   default = "standard"
 }
+
+variable "volume_size" {
+  type = string
+  default = "32Gi"
+}
+
+variable "service_type" {
+  description = "Service type selection"
+  type        = string
+  default     = "nginx"
+
+  validation {
+    condition     = contains(["nginx", "lb"], var.service_type)
+    error_message = "The image must be 'nginx', 'lb'"
+  }
+}
