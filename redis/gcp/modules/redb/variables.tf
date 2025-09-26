@@ -54,5 +54,16 @@ variable "modules" {
 }
 
 variable "nginx_ingress_ip" {
-  type = string
+  type    = string
+  default = null
+
+  validation {
+    condition     = var.ingress_enabled ? var.nginx_ingress_ip != null : true
+    error_message = "nginx_ingress_ip cannot be null when ingress_enabled is true."
+  }
+}
+
+variable "ingress_enabled" {
+  type    = bool
+  default = true
 }

@@ -27,3 +27,13 @@ output "cluster_password" {
   value       = module.rec.cluster_password
   sensitive   = true
 }
+
+output "redis_url" {
+  description = "Redis UI URL"
+  value       = module.rec.redis_ui_url
+}
+
+output "redis_database" {
+  description = "Redis Database hostname"
+  value = "${module.redb.database_hostname}:${module.redb.database_port}"
+}
