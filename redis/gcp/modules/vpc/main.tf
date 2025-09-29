@@ -4,6 +4,11 @@ resource "google_compute_network" "vpc" {
   name                    = var.name
   auto_create_subnetworks = "false"
   project                 = var.gcp_project_id
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = "for RULE in $(gcloud compute firewall-rules list --filter=\"network:${self.name}\" --project=${self.project} --format=\"value(name)\"); do gcloud compute firewall-rules delete \"$RULE\" --project=${self.project} -q ; done"
+  }
 }
 
 resource "google_compute_subnetwork" "subnetwork" {
@@ -24,6 +29,6 @@ resource "google_compute_firewall" "allow_ssh_iap" {
     ports    = ["22"]
   }
 
-  source_ranges = ["35.235.240.0/20"] # This is the IP range for IAP
+  source_ranges = ["35.235.240.0/20"]
   target_tags   = ["ssh-iap"]
 }
