@@ -74,3 +74,17 @@ spec:
   uiServiceType: LoadBalancer
   username: demo@redis.com
 ```
+
+### Proxy Certificate Secret
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: proxy-cert-secret
+  namespace: redis
+type: Opaque
+data:
+  certificate: Y2VydA== # Base64 encoded certificate PEM
+  key: a2V5             # Base64 encoded key PEM
+  name: cHJveHk=        # Base64 encoded "proxy"
+```

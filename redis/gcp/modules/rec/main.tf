@@ -72,9 +72,9 @@ resource "kubernetes_secret_v1" "proxy_cert_secret" {
   type = "Opaque"
 
   data = {
-    certificate = base64encode(tls_locally_signed_cert.server.cert_pem)
-    key         = base64encode(tls_private_key.server.private_key_pem)
-    name        = "cHJveHk="
+    certificate = tls_locally_signed_cert.server.cert_pem
+    key         = tls_private_key.server.private_key_pem
+    name        = "proxy"
   }
 }
 
