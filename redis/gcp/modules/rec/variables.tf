@@ -4,6 +4,11 @@ variable "domain_name" {
   type = string
 }
 
+variable "tls_secret" {
+  type = string
+  default = ""
+}
+
 variable "namespace" {
   type    = string
   default = "redis"
@@ -45,7 +50,7 @@ variable "service_type" {
   default     = "nginx"
 
   validation {
-    condition     = contains(["nginx", "lb"], var.service_type)
-    error_message = "The image must be 'nginx', 'lb'"
+    condition     = contains(["nginx", "haproxy", "lb"], var.service_type)
+    error_message = "The service_type must be 'nginx', 'haproxy', or 'lb'"
   }
 }

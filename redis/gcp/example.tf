@@ -75,14 +75,23 @@ module "gke_env" {
   depends_on             = [module.gke]
 }
 
+module "argocd" {
+  source                 = "./modules/argocd"
+  gke_domain_name        = module.gke.cluster_domain
+  depends_on             = [module.gke_env]
+}
+
 module "operator" {
   source                 = "./modules/operator"
+  gke_domain_name        = module.gke.cluster_domain
+  depends_on             = [module.gke_env]
 }
 
 module "rec" {
   source                 = "./modules/rec"
   domain_name            = module.gke_env.gke_domain_name
   storage_class          = module.gke_env.gke_storage_class
+  tls_secret             = module.operator.tls_secret
   service_type           = var.rec_service_type
   depends_on             = [module.operator]
 }
@@ -91,9 +100,8 @@ module "redb" {
   source                 = "./modules/redb"
   name                   = "redb1"
   domain_name            = module.gke_env.gke_domain_name
-  nginx_ingress_ip       = module.gke_env.nginx_ingress_ip
   cluster                = module.rec.cluster
-  ingress_enabled        = module.rec.ingress_enabled
+  service_type           = module.rec.service_type
   depends_on             = [module.rec]
 }
 

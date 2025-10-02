@@ -16,6 +16,11 @@ output "grafana_admin_password" {
   sensitive   = true
 }
 
+output "grafana_ui" {
+  description = "Grafana UI URL"
+  value       = module.gke_env.grafana_ui
+}
+
 output "database_password" {
   description = "Redis Database password"
   value       = module.redb.database_password
@@ -36,4 +41,9 @@ output "redis_url" {
 output "redis_database" {
   description = "Redis Database hostname"
   value = "${module.redb.database_hostname}:${module.redb.database_port}"
+}
+
+output "argocd_ui" {
+  description = "ArgoCD UI URL"
+  value       = module.argocd.argocd_ui
 }

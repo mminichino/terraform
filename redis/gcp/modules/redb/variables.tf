@@ -53,17 +53,23 @@ variable "modules" {
   default = ["ReJSON", "search", "timeseries"]
 }
 
-variable "nginx_ingress_ip" {
+variable "ingress_service" {
   type    = string
-  default = null
-
-  validation {
-    condition     = var.ingress_enabled ? var.nginx_ingress_ip != null : true
-    error_message = "nginx_ingress_ip cannot be null when ingress_enabled is true."
-  }
+  default = "ingress-nginx-controller"
 }
 
-variable "ingress_enabled" {
-  type    = bool
-  default = true
+variable "ingress_namespace" {
+  type    = string
+  default = "ingress-nginx"
+}
+
+variable "service_type" {
+  description = "Service type selection"
+  type        = string
+  default     = "nginx"
+
+  validation {
+    condition     = contains(["nginx", "haproxy", "lb"], var.service_type)
+    error_message = "The service_type must be 'nginx', 'haproxy', or 'lb'"
+  }
 }

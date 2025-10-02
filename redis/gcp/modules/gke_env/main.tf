@@ -101,6 +101,10 @@ resource "helm_release" "nginx_ingress" {
   depends_on = [helm_release.cert_manager]
 }
 
+locals {
+  grafana_hostname = "grafana.${var.gke_domain_name}"
+}
+
 resource "helm_release" "prometheus" {
   name             = "prometheus"
   namespace        = "monitoring"
@@ -123,7 +127,7 @@ resource "helm_release" "prometheus" {
   set_list = [
     {
       name  = "grafana.ingress.hosts"
-      value = ["grafana.${var.gke_domain_name}"]
+      value = [local.grafana_hostname]
     }
   ]
 
