@@ -95,6 +95,22 @@ resource "helm_release" "nginx_ingress" {
     {
       name  = "tcp.12003"
       value = "redis/redb4:12003"
+    },
+    {
+      name  = "tcp.12004"
+      value = "redis/redb5:12004"
+    },
+    {
+      name  = "tcp.12005"
+      value = "redis/redb6:12005"
+    },
+    {
+      name  = "tcp.12006"
+      value = "redis/redb7:12006"
+    },
+    {
+      name  = "tcp.12007"
+      value = "redis/redb8:12007"
     }
   ]
 
