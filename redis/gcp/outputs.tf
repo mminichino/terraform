@@ -47,3 +47,9 @@ output "argocd_ui" {
   description = "ArgoCD UI URL"
   value       = module.argocd.argocd_ui
 }
+
+output "argocd_password" {
+  description = "ArgoCD Admin Password"
+  value       = module.argocd.admin_password
+  sensitive   = true
+}

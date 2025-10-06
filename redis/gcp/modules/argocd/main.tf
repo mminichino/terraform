@@ -103,3 +103,11 @@ resource "kubernetes_ingress_v1" "argocd_ui" {
   }
   depends_on = [helm_release.argocd]
 }
+
+data "kubernetes_secret_v1" "argocd_admin_password" {
+  metadata {
+    name      = "argocd-initial-admin-secret"
+    namespace = kubernetes_namespace_v1.argocd.metadata[0].name
+  }
+  depends_on = [helm_release.argocd]
+}
