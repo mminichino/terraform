@@ -7,13 +7,25 @@ data "google_container_engine_versions" "gke_version" {
 
 data "google_client_openid_userinfo" "current" {}
 
+data "google_compute_zones" "zones" {
+  project = var.gcp_project_id
+  region  = var.gcp_region
+  status  = "UP"
+}
+
+resource "random_shuffle" "random_gcp_zone" {
+  input = data.google_compute_zones.zones.names
+}
+
 locals {
   cluster_name = "${var.name}-gke"
+  zone = var.zone != null ? var.zone : random_shuffle.random_gcp_zone.result[0]
+  location = var.regional_cluster ? var.gcp_region : local.zone
 }
 
 resource "google_container_cluster" "kubernetes" {
   name                     = local.cluster_name
-  location                 = var.gcp_region
+  location                 = local.location
   network                  = var.network_name
   subnetwork               = var.subnet_name
   remove_default_node_pool = true
@@ -61,7 +73,7 @@ locals {
 
 resource "google_container_node_pool" "worker_nodes" {
   name       = local.node_pool_name
-  location   = var.gcp_region
+  location   = local.location
   cluster    = google_container_cluster.kubernetes.name
 
   version = data.google_container_engine_versions.gke_version.release_channel_default_version["REGULAR"]

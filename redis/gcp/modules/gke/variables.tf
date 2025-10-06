@@ -6,6 +6,12 @@ variable "name" {
   default     = "gke-cluster"
 }
 
+variable "regional_cluster" {
+  description = "GKE cluster type"
+  type        = bool
+  default     = true
+}
+
 variable "gcp_project_id" {
   description = "The GCP project ID."
   type        = string
@@ -14,6 +20,12 @@ variable "gcp_project_id" {
 variable "gcp_region" {
   description = "The GCP region for the GKE cluster."
   type        = string
+}
+
+variable "zone" {
+  description = "Availability zone"
+  type        = string
+  default     = null
 }
 
 variable "network_name" {
