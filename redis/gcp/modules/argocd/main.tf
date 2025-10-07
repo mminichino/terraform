@@ -119,7 +119,9 @@ resource "kubernetes_config_map_v1" "cluster_settings" {
   }
 
   data = {
-    "cluster.values.dns.domain" = var.gke_domain_name
+    "config" = <<-EOT
+domain: "${var.gke_domain_name}"
+EOT
   }
   depends_on = [kubernetes_namespace_v1.argocd]
 }
