@@ -111,3 +111,16 @@ data "kubernetes_secret_v1" "argocd_admin_password" {
   }
   depends_on = [helm_release.argocd]
 }
+
+resource "kubernetes_secret_v1" "cluster_settings" {
+  metadata {
+    name      = "cluster-settings"
+    namespace = "argocd"
+  }
+  type = "Opaque"
+
+  data = {
+    domain = var.gke_domain_name
+  }
+  depends_on = [kubernetes_namespace_v1.argocd]
+}
