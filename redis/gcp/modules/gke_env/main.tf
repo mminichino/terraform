@@ -168,3 +168,14 @@ data "kubernetes_service_v1" "nginx_ingress" {
 locals {
   nginx_ingress_ip = data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip
 }
+
+resource "kubernetes_secret_v1" "cluster_settings" {
+  metadata {
+    name = "cluster-settings"
+  }
+  type = "Opaque"
+
+  data = {
+    domain = var.gke_domain_name
+  }
+}
