@@ -1,9 +1,5 @@
 ##
 
-variable "subscription_id" {
-  type = string
-}
-
 variable "name" {
   type = string
 }
@@ -18,24 +14,28 @@ variable "cloud" {
   }
 }
 
+variable "region" {
+  default = "us-east-2"
+}
+
+variable "cidr" {
+  type = string
+  default = "10.0.0.0/24"
+}
+
 variable "replication" {
   type = bool
   default = true
 }
 
-variable "memory_gb" {
+variable "max_db_size" {
   type = number
-  default = 1
+  default = 25
 }
 
-variable "modules" {
-  type    = list(string)
-  default = ["RedisJSON", "RediSearch", "RedisTimeSeries", "RedisBloom"]
-}
-
-variable "persistence" {
-  type = string
-  default = "aof-every-write"
+variable "db_quantity" {
+  type = number
+  default = 4
 }
 
 variable "throughput_measurement" {
@@ -46,10 +46,4 @@ variable "throughput_measurement" {
 variable "throughput" {
   type = number
   default = 25000
-}
-
-variable "tags" {
-  description = "Optional tags"
-  type        = map(string)
-  default     = {}
 }

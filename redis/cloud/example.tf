@@ -5,9 +5,15 @@ provider "rediscloud" {
   secret_key = var.secret_key
 }
 
-module "cloud_db" {
-  source = "./modules/database"
+module "subscription" {
+  source = "./modules/subscription"
   name   = var.name
   cloud  = var.cloud
   region = var.region
+}
+
+module "database" {
+  source          = "./modules/database"
+  name            = var.name
+  subscription_id = module.subscription.subscription_id
 }
