@@ -32,3 +32,25 @@ resource "google_compute_firewall" "allow_ssh_iap" {
   source_ranges = ["35.235.240.0/20"]
   target_tags   = ["ssh-iap"]
 }
+
+resource "google_compute_firewall" "allow_internal" {
+  name    = "${var.name}-allow-internal"
+  network = google_compute_network.vpc.name
+  project = var.gcp_project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = [var.cidr_block]
+}
