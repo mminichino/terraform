@@ -32,8 +32,3 @@ variable "plan" {
   type    = string
   default = "Single-Zone_Persistence_5GB"
 }
-
-variable "modules" {
-  type    = list(string)
-  default = ["RedisJSON", "RediSearch", "RedisTimeSeries", "RedisBloom"]
-}

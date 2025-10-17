@@ -27,10 +27,4 @@ resource "rediscloud_essentials_database" "database" {
 
   data_persistence = var.persistence
   replication      = var.replication
-
-  modules = [
-    for name in var.modules : {
-      name = name
-    }
-  ]
 }
