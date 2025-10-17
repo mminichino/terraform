@@ -28,6 +28,11 @@ variable "persistence" {
   default = "aof-every-1-second"
 }
 
+variable "eviction" {
+  type    = string
+  default = "noeviction"
+}
+
 variable "plan" {
   type    = string
   default = "Single-Zone_Persistence_5GB"

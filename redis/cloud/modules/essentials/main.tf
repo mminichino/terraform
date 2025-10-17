@@ -26,5 +26,6 @@ resource "rediscloud_essentials_database" "database" {
   password            = random_string.password.id
 
   data_persistence = var.persistence
+  data_eviction    = var.eviction
   replication      = var.replication
 }
