@@ -97,6 +97,11 @@ variable "ec2_instance_role" {
   type        = string
 }
 
+variable "bucket" {
+  type    = string
+  default = "redis-enterprise-software"
+}
+
 variable "redis_distribution" {
   description = "Redis Enterprise distribution tar file"
   type = string
