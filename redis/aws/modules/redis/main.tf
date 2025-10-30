@@ -148,8 +148,8 @@ resource "aws_instance" "redis_nodes" {
   }
 
   user_data_base64 = base64encode(templatefile("${path.module}/scripts/redis.sh", {
-    redis_distribution    = var.redis_distribution
-    bucket                = var.bucket
+    software_version = var.software_version
+    bucket           = var.bucket
   }))
 
   connection {
@@ -161,7 +161,7 @@ resource "aws_instance" "redis_nodes" {
 
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait > /dev/null 2>&1",
+      "sudo cloud-init status --wait > /dev/null 2>&1",
     ]
   }
 

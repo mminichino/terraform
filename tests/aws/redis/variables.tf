@@ -25,6 +25,10 @@ variable "private_key" {
   type = string
 }
 
-variable "installer_tar" {
+variable "bucket" {
+  type = string
+}
+
+variable "software_version" {
   type = string
 }

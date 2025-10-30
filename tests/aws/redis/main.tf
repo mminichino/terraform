@@ -7,7 +7,7 @@ provider "aws" {
 module "vpc" {
   source                = "../../../redis/aws/modules/vpc"
   name                  = "usc1-${var.name}"
-  cidr_block            = "10.88.0.0/16"
+  cidr_block            = "10.81.0.0/16"
 }
 
 module "redis" {
@@ -15,7 +15,8 @@ module "redis" {
   name                  = "usc1-${var.name}"
   private_key_file      = var.private_key
   public_key_file       = var.public_key
-  redis_distribution    = var.installer_tar
+  bucket                = var.bucket
+  software_version      = var.software_version
   ec2_instance_role     = var.ec2_role
   parent_domain         = var.dns_domain
   aws_subnet_id_list    = module.vpc.subnet_id_list

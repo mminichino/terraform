@@ -25,9 +25,9 @@ echo "Creating partition on $DEVICE"
 parted -s "$DEVICE" mklabel gpt
 parted -s "$DEVICE" mkpart primary xfs 0% 100%
 
-PARTITION="${DEVICE}1"
+PARTITION="$${DEVICE}1"
 if [[ $DEVICE == *"nvme"* ]]; then
-    PARTITION="${DEVICE}p1"
+    PARTITION="$${DEVICE}p1"
 fi
 
 mkfs.xfs "$PARTITION"
@@ -48,7 +48,7 @@ cd /tmp/redis || exit
 echo "Installing Redis Enterprise"
 
 echo "Copying installation tar file"
-aws s3 cp "s3://${bucket}/${redis_distribution}" ./redis-enterprise.tar
+aws s3 cp "s3://${bucket}/redislabs-${software_version}-amzn2-x86_64.tar" ./redis-enterprise.tar
 
 tar -xf redis-enterprise.tar
 

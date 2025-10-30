@@ -6,11 +6,6 @@ variable "name" {
   default     = "redis"
 }
 
-variable "aws_region" {
-  description = "AWS region"
-  default = "us-east-2"
-}
-
 variable "aws_vpc_id" {
   description = "AWS VPC id"
   type = string
@@ -102,9 +97,9 @@ variable "bucket" {
   default = "redis-enterprise-software"
 }
 
-variable "redis_distribution" {
-  description = "Redis Enterprise distribution tar file"
-  type = string
+variable "software_version" {
+  description = "Redis Enterprise Software version"
+  type        = string
 }
 
 variable "tags" {
