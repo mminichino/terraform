@@ -1,15 +1,11 @@
 # Deploy Redis
 
-provider "aws" {
-  region = var.aws_region
-}
-
-data "aws_ami" "ubuntu" {
+data "aws_ami" "amazon_linux" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
   }
 
   filter {
@@ -17,11 +13,11 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"]
+  owners = ["amazon"]
 }
 
 resource "random_string" "password" {
-  length           = 16
+  length           = 8
   special          = false
 }
 
@@ -29,12 +25,8 @@ data "aws_route53_zone" "public_zone" {
   name = var.parent_domain
 }
 
-locals {
-  vpc_dns_server = cidrhost(var.aws_vpc_cidr, 2)
-}
-
 resource "aws_key_pair" "key_pair" {
-  key_name   = "${var.name}-key-pair"
+  key_name   = "${var.name}-redis-key-pair"
   public_key = file("~/.ssh/${var.public_key_file}")
 
   tags = merge(var.tags, {
@@ -133,7 +125,7 @@ locals {
 
 resource "aws_instance" "redis_nodes" {
   count                       = var.node_count
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.redis_machine_type
   key_name                    = aws_key_pair.key_pair.key_name
   vpc_security_group_ids      = [aws_security_group.redis_sg.id]
@@ -155,22 +147,21 @@ resource "aws_instance" "redis_nodes" {
     throughput  = var.data_volume_throughput
   }
 
-  user_data_base64 = base64encode(templatefile("${path.module}/scripts/rec.sh", {
-    aws_region            = var.aws_region
-    redis_distribution    = var.redis_distribution
-    dns_server            = local.vpc_dns_server
+  user_data_base64 = base64encode(templatefile("${path.module}/scripts/redis.sh", {
+    software_version = var.software_version
+    bucket           = var.bucket
   }))
 
   connection {
     type        = "ssh"
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file("~/.ssh/${var.private_key_file}")
     host        = self.public_ip
   }
 
   provisioner "remote-exec" {
     inline = [
-      "cloud-init status --wait > /dev/null 2>&1",
+      "sudo cloud-init status --wait > /dev/null 2>&1",
     ]
   }
 
@@ -214,7 +205,7 @@ resource "null_resource" "create_cluster" {
 
   connection {
     type        = "ssh"
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file("~/.ssh/${var.private_key_file}")
     host        = aws_instance.redis_nodes[0].public_ip
   }
@@ -248,7 +239,7 @@ resource "null_resource" "join_cluster" {
 
   connection {
     type        = "ssh"
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file("~/.ssh/${var.private_key_file}")
     host        = aws_instance.redis_nodes[count.index + 1].public_ip
   }
