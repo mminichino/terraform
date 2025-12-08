@@ -168,3 +168,20 @@ data "kubernetes_service_v1" "nginx_ingress" {
 locals {
   nginx_ingress_ip = data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip
 }
+
+resource "google_dns_managed_zone" "ingress" {
+  name        = "ingress-${replace(var.gke_domain_name, ".", "-")}"
+  dns_name    = "ingress.${var.gke_domain_name}."
+  description = "Zone for ingress.${var.gke_domain_name}"
+}
+
+resource "google_dns_record_set" "ingress_wildcard" {
+  name         = "*.ingress.${var.gke_domain_name}."
+  type         = "A"
+  ttl          = 10
+  managed_zone = google_dns_managed_zone.ingress.name
+
+  rrdatas = [
+    local.nginx_ingress_ip,
+  ]
+}
