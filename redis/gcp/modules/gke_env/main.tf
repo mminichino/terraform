@@ -87,6 +87,10 @@ resource "helm_release" "haproxy_ingress" {
     {
       name  = "controller.service.type"
       value = "LoadBalancer"
+    },
+    {
+      name  = "controller.service.enableUDP"
+      value = false
     }
   ]
 
