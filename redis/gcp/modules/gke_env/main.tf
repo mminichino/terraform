@@ -87,13 +87,10 @@ resource "helm_release" "haproxy_ingress" {
     {
       name  = "controller.service.type"
       value = "LoadBalancer"
-    }
-  ]
-
-  set_list = [
+    },
     {
-      name  = "controller.service.udpPorts"
-      value = []
+      name  = "controller.service.enablePorts.quic"
+      value = false
     }
   ]
 
