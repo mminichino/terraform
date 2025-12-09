@@ -175,6 +175,14 @@ resource "google_dns_managed_zone" "ingress" {
   description = "Zone for ingress.${var.gke_domain_name}"
 }
 
+resource "google_dns_record_set" "subdomain_ns_delegation" {
+  name         = "ingress.${var.gke_domain_name}."
+  managed_zone = replace(var.gke_domain_name, ".", "-")
+  type         = "NS"
+  ttl          = 300
+  rrdatas      = google_dns_managed_zone.ingress.name_servers
+}
+
 resource "google_dns_record_set" "ingress_wildcard" {
   name         = "*.ingress.${var.gke_domain_name}."
   type         = "A"
