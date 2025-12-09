@@ -78,7 +78,6 @@ resource "kubernetes_ingress_v1" "argocd_ui" {
     namespace = "argocd"
     annotations = {
       "ingress.kubernetes.io/ssl-passthrough"  = "true"
-      "haproxy.org/server-ssl": "true"
     }
   }
   spec {
