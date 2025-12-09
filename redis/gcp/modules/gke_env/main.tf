@@ -116,7 +116,7 @@ resource "helm_release" "prometheus" {
     },
     {
       name  = "grafana.ingress.annotations.kubernetes\\.io/ingress\\.class"
-      value = "nginx"
+      value = "haproxy"
     }
   ]
 

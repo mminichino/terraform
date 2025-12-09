@@ -77,12 +77,11 @@ resource "kubernetes_ingress_v1" "argocd_ui" {
     name      = "argocd-server"
     namespace = "argocd"
     annotations = {
-      "nginx.ingress.kubernetes.io/ssl-passthrough"  = "true"
-      "nginx.ingress.kubernetes.io/backend-protocol" = "HTTPS"
+      "ingress.kubernetes.io/ssl-passthrough"  = "true"
     }
   }
   spec {
-    ingress_class_name = "nginx"
+    ingress_class_name = "haproxy"
     rule {
       host = local.argocd_hostname
       http {
