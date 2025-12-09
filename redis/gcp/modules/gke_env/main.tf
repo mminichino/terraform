@@ -89,6 +89,14 @@ resource "helm_release" "haproxy_ingress" {
       value = "LoadBalancer"
     },
     {
+      name  = "controller.service.enablePorts.http"
+      value = true
+    },
+    {
+      name  = "controller.service.enablePorts.https"
+      value = true
+    },
+    {
       name  = "controller.service.enablePorts.quic"
       value = false
     }
