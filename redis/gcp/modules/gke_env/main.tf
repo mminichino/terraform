@@ -71,46 +71,22 @@ resource "helm_release" "cert_manager" {
   depends_on = [helm_release.external_dns]
 }
 
-resource "helm_release" "nginx_ingress" {
-  name             = "ingress-nginx"
-  namespace        = "ingress-nginx"
-  repository       = "https://kubernetes.github.io/ingress-nginx"
-  chart            = "ingress-nginx"
+resource "helm_release" "haproxy_ingress" {
+  name             = "haproxy-ingress"
+  namespace        = "haproxy-ingress"
+  repository       = "https://haproxytech.github.io/helm-charts"
+  chart            = "kubernetes-ingress"
   create_namespace = true
   cleanup_on_fail  = true
 
   set = [
     {
-      name  = "tcp.12000"
-      value = "redis/redb1:12000"
+      name  = "controller.replicaCount"
+      value = 2
     },
     {
-      name  = "tcp.12001"
-      value = "redis/redb2:12001"
-    },
-    {
-      name  = "tcp.12002"
-      value = "redis/redb3:12002"
-    },
-    {
-      name  = "tcp.12003"
-      value = "redis/redb4:12003"
-    },
-    {
-      name  = "tcp.12004"
-      value = "redis/redb5:12004"
-    },
-    {
-      name  = "tcp.12005"
-      value = "redis/redb6:12005"
-    },
-    {
-      name  = "tcp.12006"
-      value = "redis/redb7:12006"
-    },
-    {
-      name  = "tcp.12007"
-      value = "redis/redb8:12007"
+      name  = "controller.service.type"
+      value = "LoadBalancer"
     }
   ]
 
@@ -153,20 +129,20 @@ resource "helm_release" "prometheus" {
       value = random_string.grafana_password.id
     }
   ]
-  depends_on = [helm_release.nginx_ingress, kubernetes_cluster_role_binding_v1.admin]
+  depends_on = [helm_release.haproxy_ingress, kubernetes_cluster_role_binding_v1.admin]
 }
 
-data "kubernetes_service_v1" "nginx_ingress" {
+data "kubernetes_service_v1" "haproxy_ingress" {
   metadata {
-    name      = "ingress-nginx-controller"
-    namespace = "ingress-nginx"
+    name      = "haproxy-ingress-kubernetes-ingress"
+    namespace = "haproxy-ingress"
   }
   depends_on = [helm_release.prometheus]
 }
 
 # noinspection HILUnresolvedReference
 locals {
-  nginx_ingress_ip = data.kubernetes_service_v1.nginx_ingress.status.0.load_balancer.0.ingress.0.ip
+  nginx_ingress_ip = data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip
 }
 
 resource "google_dns_managed_zone" "ingress" {
@@ -181,15 +157,4 @@ resource "google_dns_record_set" "subdomain_ns_delegation" {
   type         = "NS"
   ttl          = 300
   rrdatas      = google_dns_managed_zone.ingress.name_servers
-}
-
-resource "google_dns_record_set" "ingress_wildcard" {
-  name         = "*.ingress.${var.gke_domain_name}."
-  type         = "A"
-  ttl          = 10
-  managed_zone = google_dns_managed_zone.ingress.name
-
-  rrdatas = [
-    local.nginx_ingress_ip,
-  ]
 }
