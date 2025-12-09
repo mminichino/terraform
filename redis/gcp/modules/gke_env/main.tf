@@ -142,7 +142,7 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 
 # noinspection HILUnresolvedReference
 locals {
-  nginx_ingress_ip = data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip
+  nginx_ingress_ip = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
 }
 
 resource "google_dns_managed_zone" "ingress" {
