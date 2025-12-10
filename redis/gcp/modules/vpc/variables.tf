@@ -20,3 +20,13 @@ variable "cidr_block" {
   type        = string
   default     = "10.55.0.0/16"
 }
+
+variable "services_range" {
+  type    = string
+  default = "192.168.1.0/24"
+}
+
+variable "pod_range" {
+  type    = string
+  default = "192.168.64.0/22"
+}

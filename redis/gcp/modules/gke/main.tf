@@ -33,6 +33,11 @@ resource "google_container_cluster" "kubernetes" {
   deletion_protection      = false
   datapath_provider        = "ADVANCED_DATAPATH"
 
+  ip_allocation_policy {
+    cluster_secondary_range_name = "pod-range"
+    services_secondary_range_name = "services-range"
+  }
+
   master_auth {
     client_certificate_config {
       issue_client_certificate = false

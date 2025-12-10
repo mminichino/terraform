@@ -2,7 +2,7 @@
 
 resource "google_compute_network" "vpc" {
   name                    = var.name
-  auto_create_subnetworks = "false"
+  auto_create_subnetworks = false
   project                 = var.gcp_project_id
 
   provisioner "local-exec" {
@@ -17,6 +17,16 @@ resource "google_compute_subnetwork" "subnetwork" {
   network       = google_compute_network.vpc.id
   region        = var.gcp_region
   project       = var.gcp_project_id
+
+  secondary_ip_range {
+    range_name    = "services-range"
+    ip_cidr_range = var.services_range
+  }
+
+  secondary_ip_range {
+    range_name    = "pod-range"
+    ip_cidr_range = var.pod_range
+  }
 }
 
 resource "google_compute_firewall" "allow_ssh_iap" {
@@ -52,5 +62,9 @@ resource "google_compute_firewall" "allow_internal" {
     protocol = "icmp"
   }
 
-  source_ranges = [var.cidr_block]
+  source_ranges = [
+    var.cidr_block,
+    var.services_range,
+    var.pod_range
+  ]
 }
