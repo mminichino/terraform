@@ -63,7 +63,7 @@ resource "google_compute_firewall" "allow_internal" {
   }
 
   source_ranges = [var.cidr_block]
-  destination_ranges = [var.services_range]
+  destination_ranges = [var.pod_range]
   direction = "INGRESS"
   priority = 1000
 }
@@ -87,7 +87,32 @@ resource "google_compute_firewall" "allow_secondary" {
     protocol = "icmp"
   }
 
-  source_ranges = [var.services_range]
+  source_ranges = [var.pod_range]
+  destination_ranges = [var.cidr_block]
+  direction = "INGRESS"
+  priority = 1000
+}
+
+resource "google_compute_firewall" "allow_primary" {
+  name    = "${var.name}-allow-primary"
+  network = google_compute_network.vpc.name
+  project = var.gcp_project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = [var.cidr_block]
   destination_ranges = [var.cidr_block]
   direction = "INGRESS"
   priority = 1000
