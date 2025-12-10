@@ -62,9 +62,33 @@ resource "google_compute_firewall" "allow_internal" {
     protocol = "icmp"
   }
 
-  source_ranges = [
-    var.cidr_block,
-    var.services_range,
-    var.pod_range
-  ]
+  source_ranges = [var.cidr_block]
+  destination_ranges = [var.services_range]
+  direction = "INGRESS"
+  priority = 1000
+}
+
+resource "google_compute_firewall" "allow_secondary" {
+  name    = "${var.name}-allow-secondary"
+  network = google_compute_network.vpc.name
+  project = var.gcp_project_id
+
+  allow {
+    protocol = "tcp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = [var.services_range]
+  destination_ranges = [var.cidr_block]
+  direction = "INGRESS"
+  priority = 1000
 }
