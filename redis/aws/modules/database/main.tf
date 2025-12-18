@@ -8,7 +8,7 @@ resource "random_string" "password" {
 locals {
   external_endpoint = "redis-${var.port}.${var.cluster_domain}"
   internal_endpoint = "redis-${var.port}.internal.${var.cluster_domain}"
-  workers = max(1, round(var.cpu_count * 0.66666667))
+  workers = max(1, floor(var.cpu_count * 0.66666667 + 0.5))
   data_json = jsonencode(
     merge(
       {
