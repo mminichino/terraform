@@ -25,6 +25,7 @@ while true; do
     fi
 done
 
+echo "Creating cluster"
 cat <<EOF | curl -k -s -w "Status: %%{http_code}\n" -H "Content-type: application/json" -X POST --data-binary @- https://localhost:9443/v1/bootstrap/create_cluster
 {
     "action": "create_cluster",

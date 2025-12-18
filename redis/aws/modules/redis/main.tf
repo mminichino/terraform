@@ -216,7 +216,7 @@ resource "null_resource" "create_cluster" {
       domain_name  = local.cluster_domain
       admin_user   = var.admin_user
       password     = random_string.password.id
-      license      = var.license
+      license      = replace(var.license, "\n", "\\n")
     })
     destination = "/tmp/create_cluster.sh"
   }
