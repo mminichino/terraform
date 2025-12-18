@@ -103,3 +103,7 @@ variable "oss_cluster_type" {
   default     = "internal"
   description = "Preferred IP type for OSS cluster API"
 }
+
+variable "cpu_count" {
+  type = number
+}

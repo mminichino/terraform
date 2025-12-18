@@ -43,3 +43,7 @@ output "admin_user" {
 output "password" {
   value = random_string.password.id
 }
+
+output "cpu_count" {
+  value = local.cpu_count
+}

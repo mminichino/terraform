@@ -25,6 +25,10 @@ data "aws_route53_zone" "public_zone" {
   name = var.parent_domain
 }
 
+data "aws_ec2_instance_type" "machine_type" {
+  instance_type = var.redis_machine_type
+}
+
 resource "aws_key_pair" "key_pair" {
   key_name   = "${var.name}-redis-key-pair"
   public_key = file("~/.ssh/${var.public_key_file}")
@@ -122,6 +126,7 @@ data "aws_iam_instance_profile" "ec2_s3_profile" {
 locals {
   cluster_name   = "${var.name}-redis"
   cluster_domain = "${local.cluster_name}.${data.aws_route53_zone.public_zone.name}"
+  cpu_count      = data.aws_ec2_instance_type.machine_type.default_vcpus
 }
 
 resource "aws_instance" "redis_nodes" {
