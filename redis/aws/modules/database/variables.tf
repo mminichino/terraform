@@ -45,3 +45,57 @@ variable "eviction" {
   type    = bool
   default = false
 }
+
+variable "proxy_policy" {
+  type        = string
+  default     = "all-master-shards"
+  description = "Proxy policy for the database"
+}
+
+variable "shards_count" {
+  type        = number
+  default     = 1
+  description = "Number of shards"
+}
+
+variable "shards_placement" {
+  type        = string
+  default     = "sparse"
+  description = "Shards placement policy"
+}
+
+variable "database_type" {
+  type        = string
+  default     = "redis"
+  description = "Type of database"
+}
+
+variable "data_persistence" {
+  type        = string
+  default     = "aof"
+  description = "Data persistence policy"
+}
+
+variable "aof_policy" {
+  type        = string
+  default     = "appendfsync-every-sec"
+  description = "AOF policy"
+}
+
+variable "oss_cluster" {
+  type        = bool
+  default     = false
+  description = "Enable OSS cluster API"
+}
+
+variable "oss_cluster_endpoint" {
+  type        = string
+  default     = "ip"
+  description = "Preferred endpoint type for OSS cluster API"
+}
+
+variable "oss_cluster_type" {
+  type        = string
+  default     = "internal"
+  description = "Preferred IP type for OSS cluster API"
+}

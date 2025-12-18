@@ -102,6 +102,11 @@ variable "software_version" {
   type        = string
 }
 
+variable "license" {
+  type    = string
+  default = ""
+}
+
 variable "tags" {
   description = "Optional tags"
   type        = map(string)

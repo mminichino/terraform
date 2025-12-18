@@ -64,7 +64,7 @@ cat <<EOF | curl -k -s -w "Status: %%{http_code}\n" -H "Content-type: applicatio
       "username": "${admin_user}",
       "password": "${password}"
     },
-    "license": ""
+    "license": "${license}"
 }
 EOF
 
