@@ -6,6 +6,8 @@ resource "random_string" "password" {
 }
 
 locals {
+  external_endpoint = "redis-${var.port}.${var.cluster_domain}"
+  internal_endpoint = "redis-${var.port}.internal.${var.cluster_domain}"
   data_json = jsonencode(
     merge(
       {
@@ -49,6 +51,11 @@ locals {
       } : {}
     )
   )
+  proxy_json = jsonencode({
+    proxy = {
+      threads = 16
+    }
+  })
 }
 
 resource "null_resource" "database" {
@@ -71,6 +78,7 @@ resource "null_resource" "database" {
     when   = create
     inline = [
       "curl -k -s -u '${self.triggers.username}:${self.triggers.password}' -X POST -H 'Content-Type: application/json' --data-raw '${local.data_json}' https://localhost:9443/v1/bdbs",
+      "curl -k -s -u '${self.triggers.username}:${self.triggers.password}' -X PUT -H 'Content-Type: application/json' --data-raw '${local.proxy_json}' https://localhost:9443/v1/proxies/${var.uid}"
     ]
   }
 
