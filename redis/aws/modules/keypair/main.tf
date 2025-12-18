@@ -1,9 +1,5 @@
 # Environment
 
-provider "aws" {
-  region = var.aws_region
-}
-
 resource "aws_key_pair" "key_pair" {
   key_name   = "${var.name}-key-pair"
   public_key = file("~/.ssh/${var.public_key_file}")

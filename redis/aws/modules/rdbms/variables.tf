@@ -6,11 +6,6 @@ variable "name" {
   default     = "rdbms"
 }
 
-variable "aws_region" {
-  description = "AWS region"
-  default = "us-east-2"
-}
-
 variable "aws_vpc_id" {
   description = "AWS VPC id"
   type = string
