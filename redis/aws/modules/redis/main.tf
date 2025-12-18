@@ -120,7 +120,8 @@ data "aws_iam_instance_profile" "ec2_s3_profile" {
 }
 
 locals {
-  cluster_domain = "${var.name}.${data.aws_route53_zone.public_zone.name}"
+  cluster_name   = "${var.name}-redis"
+  cluster_domain = "${local.cluster_name}.${data.aws_route53_zone.public_zone.name}"
 }
 
 resource "aws_instance" "redis_nodes" {
@@ -166,36 +167,36 @@ resource "aws_instance" "redis_nodes" {
   }
 
   tags = merge(var.tags, {
-    Name = "${var.name}-host-${count.index + 1}"
+    Name = "${var.name}-redis-${count.index + 1}"
   })
 }
 
 resource "aws_route53_record" "host_records" {
   count   = var.node_count
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = "node${count.index + 1}.${var.name}"
+  name    = "redis${count.index + 1}"
   type    = "A"
   ttl     = 300
   records = [aws_instance.redis_nodes[count.index].public_ip]
   depends_on = [aws_instance.redis_nodes]
 }
 
+locals {
+  primary_node_private_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].private_ip : null
+  primary_node_public_ip  = var.node_count > 0 ? aws_instance.redis_nodes[0].public_ip : null
+  api_public_base_url     = var.node_count > 0 ? "https://${aws_instance.redis_nodes[0].public_ip}:9443" : null
+  instance_hostnames      = [for fqdn in aws_route53_record.host_records[*].fqdn : trimsuffix(fqdn, ".")]
+  admin_urls              = [for hostname in local.instance_hostnames : "https://${hostname}:8443"]
+}
+
 resource "aws_route53_record" "ns_record" {
   count   = var.node_count > 0 ? 1 : 0
   zone_id = data.aws_route53_zone.public_zone.zone_id
-  name    = var.name
+  name    = local.cluster_name
   type    = "NS"
   ttl     = 300
-  records = [for i in range(var.node_count) : "node${i + 1}.${local.cluster_domain}"]
-  depends_on = [aws_instance.redis_nodes]
-}
-
-locals {
-  primary_node_private_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].private_ip : null
-  primary_node_public_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].public_ip : null
-  api_public_base_url = var.node_count > 0 ? "https://${aws_instance.redis_nodes[0].public_ip}:9443" : null
-  instance_hostnames = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${var.parent_domain}"]
-  admin_urls = [for i in range(var.node_count) : "https://node${i + 1}.${var.name}.${var.parent_domain}:8443"]
+  records = aws_route53_record.host_records[*].fqdn
+  depends_on = [aws_route53_record.host_records]
 }
 
 resource "null_resource" "create_cluster" {

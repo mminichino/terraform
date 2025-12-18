@@ -16,6 +16,10 @@ output "admin_urls" {
   value = local.admin_urls
 }
 
+output "cluster_domain" {
+  value = local.cluster_domain
+}
+
 output "primary_node_public_ip" {
   value = local.primary_node_public_ip
 }
