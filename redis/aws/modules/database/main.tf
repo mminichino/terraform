@@ -47,7 +47,7 @@ resource "null_resource" "database" {
 
   connection {
     type        = "ssh"
-    user        = "ubuntu"
+    user        = "ec2-user"
     private_key = file("~/.ssh/${self.triggers.private_key}")
     host        = self.triggers.public_ip
   }
