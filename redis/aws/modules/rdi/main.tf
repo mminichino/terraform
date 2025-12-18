@@ -91,7 +91,7 @@ resource "aws_instance" "rdi_nodes" {
   user_data_base64 = base64encode(templatefile("${path.module}/scripts/rdi.sh", {
     aws_region            = var.aws_region
     dns_server            = local.vpc_dns_server
-    rdi_distribution      = var.rdi_distribution
+    rdi_version           = var.rdi_version
   }))
 
   tags = merge(var.tags, {

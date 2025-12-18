@@ -54,7 +54,7 @@ EOF
 chattr +i /etc/resolv.conf
 
 echo "Copying installation tar file"
-aws s3 cp s3://redis-enterprise-software/${rdi_distribution} /home/ubuntu/rdi.tar.gz
+aws s3 cp s3://redis-enterprise-software/rdi-installation-${rdi_version}.tar.gz /home/ubuntu/rdi.tar.gz
 
 cd /home/ubuntu || exit
 tar -xzf rdi.tar.gz

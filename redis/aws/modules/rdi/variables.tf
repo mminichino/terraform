@@ -63,8 +63,8 @@ variable "ec2_instance_role" {
   type        = string
 }
 
-variable "rdi_distribution" {
-  description = "Redis Enterprise distribution tar file"
+variable "rdi_version" {
+  description = "RDI version"
   type = string
 }
 
