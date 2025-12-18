@@ -8,7 +8,7 @@ resource "random_string" "password" {
 locals {
   external_endpoint = "redis-${var.port}.${var.cluster_domain}"
   internal_endpoint = "redis-${var.port}.internal.${var.cluster_domain}"
-  workers = max(1, floor(var.cpu_count * 0.66666667 + 0.5))
+  factor            = min(16, floor(var.cpu_count * 0.66666667 + 0.5))
   data_json = jsonencode(
     merge(
       {
@@ -29,8 +29,9 @@ locals {
         replication                             = var.replication
         eviction_policy                         = var.eviction ? "volatile-lru" : "noeviction"
         authentication_redis_pass               = random_string.password.id
-        search = {
-          search-workers = local.workers
+        query_performance_factor = {
+          active         = true
+          scaling_factor = local.factor
         }
       },
       var.shards_count > 1 ? {
