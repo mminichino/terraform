@@ -9,11 +9,11 @@ output "node_public" {
 }
 
 output "instance_hostnames" {
-  value       = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${var.parent_domain}"]
+  value = local.instance_hostnames
 }
 
 output "admin_urls" {
-  value       = [for i in range(var.node_count) : "https://node${i + 1}.${var.name}.${var.parent_domain}:8443"]
+  value = local.admin_urls
 }
 
 output "primary_node_public_ip" {

@@ -194,6 +194,8 @@ locals {
   primary_node_private_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].private_ip : null
   primary_node_public_ip = var.node_count > 0 ? aws_instance.redis_nodes[0].public_ip : null
   api_public_base_url = var.node_count > 0 ? "https://${aws_instance.redis_nodes[0].public_ip}:9443" : null
+  instance_hostnames = [for i in range(var.node_count) : "node${i + 1}.${var.name}.${var.parent_domain}"]
+  admin_urls = [for i in range(var.node_count) : "https://node${i + 1}.${var.name}.${var.parent_domain}:8443"]
 }
 
 resource "null_resource" "create_cluster" {

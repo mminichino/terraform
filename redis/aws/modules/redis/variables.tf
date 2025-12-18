@@ -3,7 +3,6 @@
 variable "name" {
   description = "Deployment name"
   type        = string
-  default     = "redis"
 }
 
 variable "aws_vpc_id" {

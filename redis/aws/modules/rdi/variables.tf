@@ -3,7 +3,6 @@
 variable "name" {
   description = "Deployment name"
   type        = string
-  default     = "rdi"
 }
 
 variable "aws_region" {
