@@ -53,7 +53,7 @@ locals {
   )
   proxy_json = jsonencode({
     proxy = {
-      threads = 16
+      threads = 8
     }
   })
 }
