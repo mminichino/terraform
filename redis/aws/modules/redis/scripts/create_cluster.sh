@@ -74,8 +74,13 @@ timeout=300
 counter=0
 while true; do
     current_state=$(curl -k -s -u "${admin_user}:${password}" https://localhost:9443/v1/bootstrap 2>&1 | jq -R -r 'fromjson? | .bootstrap_status.state' 2>&1)
-    if [ "$current_state" = "completed" ] || [ "$current_state" = "error" ]; then
+    if [ "$current_state" = "completed" ]; then
       break
+    fi
+    if [ "$current_state" = "error" ]; then
+      echo "Bootstrap failed."
+      curl -k -s -u "${admin_user}:${password}" https://localhost:9443/v1/bootstrap
+      exit 2
     fi
     sleep 5
     counter=$((counter + 5))
@@ -84,3 +89,5 @@ while true; do
         exit 1
     fi
 done
+
+echo "Bootstrap completed successfully."
