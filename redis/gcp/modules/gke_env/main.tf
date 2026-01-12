@@ -2,6 +2,8 @@
 
 data "google_client_openid_userinfo" "current" {}
 
+data "google_project" "current" {}
+
 locals {
   sa_email = data.google_client_openid_userinfo.current.email
 }
@@ -154,13 +156,23 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 
 # noinspection HILUnresolvedReference
 locals {
-  nginx_ingress_ip = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
+  nginx_ingress_ip  = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
+  ingress_zone_name = "ingress-${replace(var.gke_domain_name, ".", "-")}"
 }
 
 resource "google_dns_managed_zone" "ingress" {
-  name        = "ingress-${replace(var.gke_domain_name, ".", "-")}"
+  name        = local.ingress_zone_name
   dns_name    = "ingress.${var.gke_domain_name}."
   description = "Zone for ingress.${var.gke_domain_name}"
+
+  provisioner "local-exec" {
+    when = destroy
+    environment = {
+      PROJECT = data.google_project.current.id
+      ZONE    = local.ingress_zone_name
+    }
+    command = "gcloud dns record-sets list --project \"$PROJECT\" --zone \"$ZONE\" --types A,TXT --format='value(name,type,ttl,rrdatas.list(separator=\",\"))' | xargs -r -n4 sh -c 'gcloud dns record-sets delete \"$0\" --project \"$PROJECT\" --zone \"$ZONE\" --type \"$1\" --ttl \"$2\" --rrdatas \"$3\" --quiet || true'"
+  }
 }
 
 resource "google_dns_record_set" "subdomain_ns_delegation" {
