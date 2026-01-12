@@ -2,8 +2,6 @@
 
 data "google_client_openid_userinfo" "current" {}
 
-data "google_project" "current" {}
-
 locals {
   sa_email = data.google_client_openid_userinfo.current.email
 }
@@ -168,10 +166,10 @@ resource "google_dns_managed_zone" "ingress" {
   provisioner "local-exec" {
     when = destroy
     environment = {
-      PROJECT = data.google_project.current.id
-      ZONE    = local.ingress_zone_name
+      PROJECT = self.project
+      ZONE    = self.name
     }
-    command = "gcloud dns record-sets list --project \"$PROJECT\" --zone \"$ZONE\" --types A,TXT --format='value(name,type,ttl,rrdatas.list(separator=\",\"))' | xargs -r -n4 sh -c 'gcloud dns record-sets delete \"$0\" --project \"$PROJECT\" --zone \"$ZONE\" --type \"$1\" --ttl \"$2\" --rrdatas \"$3\" --quiet || true'"
+    command = "gcloud dns record-sets list --project ${self.project} --zone ${self.name} --filter=\"type=A OR type=TXT\" --format='value(name,type.list(separator=\",\"))' | xargs -r -n2 sh -c 'gcloud dns record-sets delete $0 --project ${self.project} --zone ${self.name} --type $1'"
   }
 }
 
