@@ -66,6 +66,10 @@ resource "google_container_cluster" "kubernetes" {
     }
   }
 
+  cost_management_config {
+    enabled = true
+  }
+
   resource_labels = merge(var.labels, {
     name       = local.cluster_name
     managed_by = "terraform"
