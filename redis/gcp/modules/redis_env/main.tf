@@ -11,6 +11,7 @@ resource "helm_release" "redis_cluster" {
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-cluster"
   version          = var.chart_version
+  create_namespace = true
   cleanup_on_fail  = true
 
   set = [
