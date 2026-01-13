@@ -2,6 +2,8 @@
 
 data "google_client_openid_userinfo" "current" {}
 
+data "google_project" "current" {}
+
 locals {
   sa_email = data.google_client_openid_userinfo.current.email
 }
@@ -164,11 +166,7 @@ resource "google_dns_managed_zone" "ingress" {
   description = "Zone for ingress.${var.gke_domain_name}"
 
   provisioner "local-exec" {
-    when = destroy
-    environment = {
-      PROJECT = self.project
-      ZONE    = self.name
-    }
+    when    = destroy
     command = "gcloud dns record-sets list --project ${self.project} --zone ${self.name} --filter=\"type=A OR type=TXT\" --format='value(name,type.list(separator=\",\"))' | xargs -r -n2 sh -c 'gcloud dns record-sets delete $0 --project ${self.project} --zone ${self.name} --type $1'"
   }
 }
@@ -179,4 +177,32 @@ resource "google_dns_record_set" "subdomain_ns_delegation" {
   type         = "NS"
   ttl          = 300
   rrdatas      = google_dns_managed_zone.ingress.name_servers
+}
+
+resource "helm_release" "external_secrets" {
+  name             = "external-secrets"
+  namespace        = "external-secrets"
+  repository       = "https://charts.external-secrets.io"
+  chart            = "external-secrets"
+  version          = "1.2.1"
+  create_namespace = true
+  cleanup_on_fail  = true
+}
+
+resource "helm_release" "gcsm_store" {
+  name             = "gcsm-store"
+  namespace        = "external-secrets"
+  repository       = "https://mminichino.github.io/helm-charts"
+  chart            = "gcsm-store"
+  version          = "0.1.6"
+  cleanup_on_fail  = true
+
+  set = [
+    {
+      name  = "project"
+      value = data.google_project.current.id
+    }
+  ]
+
+  depends_on = [helm_release.external_secrets]
 }
