@@ -1,8 +1,13 @@
 #
 
-variable "chart_version" {
+variable "cluster_chart_version" {
   type    = string
   default = "0.2.2"
+}
+
+variable "database_chart_version" {
+  type    = string
+  default = "0.1.21"
 }
 
 variable "domain_name" {

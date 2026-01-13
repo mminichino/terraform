@@ -10,7 +10,7 @@ resource "helm_release" "redis_cluster" {
   namespace         = var.namespace
   repository        = "https://mminichino.github.io/helm-charts"
   chart             = "redis-cluster"
-  version           = var.chart_version
+  version           = var.cluster_chart_version
   dependency_update = true
   create_namespace  = true
   cleanup_on_fail   = true
@@ -130,6 +130,7 @@ resource "helm_release" "redb_database" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-database"
+  version          = var.database_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
 
@@ -183,13 +184,6 @@ resource "helm_release" "redb_database" {
       value = var.external_secret_redb_key
     }
   ]
-
-  set_list = [
-    {
-      name  = "modules"
-      value = []
-    }
-  ]
   depends_on = [helm_release.redis_cluster]
 }
 
@@ -203,6 +197,7 @@ resource "helm_release" "rdidb_database" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-database"
+  version          = var.database_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
 
@@ -254,13 +249,6 @@ resource "helm_release" "rdidb_database" {
     {
       name  = "externalSecret.key"
       value = var.external_secret_rdidb_key
-    }
-  ]
-
-  set_list = [
-    {
-      name  = "modules"
-      value = []
     }
   ]
   depends_on = [helm_release.redis_cluster]
