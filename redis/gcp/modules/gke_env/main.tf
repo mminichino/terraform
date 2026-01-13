@@ -158,6 +158,7 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 locals {
   nginx_ingress_ip  = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
   ingress_zone_name = "ingress-${replace(var.gke_domain_name, ".", "-")}"
+  ingress_dns_name  = "ingress.${var.gke_domain_name}"
 }
 
 resource "google_dns_managed_zone" "ingress" {
@@ -172,7 +173,7 @@ resource "google_dns_managed_zone" "ingress" {
 }
 
 resource "google_dns_record_set" "subdomain_ns_delegation" {
-  name         = "ingress.${var.gke_domain_name}."
+  name         = "${local.ingress_dns_name}."
   managed_zone = replace(var.gke_domain_name, ".", "-")
   type         = "NS"
   ttl          = 300

@@ -2,8 +2,7 @@
 
 locals {
   ingress_enabled = contains(["nginx", "haproxy"], var.service_type)
-  redis_dns_name = "ingress.${var.namespace}.${var.domain_name}"
-  redis_ui_url_port = local.ingress_enabled ? 443 : 8443
+  # redis_ui_url_port = local.ingress_enabled ? 443 : 8443
 }
 
 resource "helm_release" "redis_cluster" {
@@ -33,7 +32,7 @@ resource "helm_release" "redis_cluster" {
     },
     {
       name = "dns.domain"
-      value = local.redis_dns_name
+      value = var.domain_name
     },
     {
       name  = "tls.secret"
