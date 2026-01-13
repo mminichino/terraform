@@ -2,7 +2,11 @@
 
 locals {
   ingress_enabled = contains(["nginx", "haproxy"], var.service_type)
-  # redis_ui_url_port = local.ingress_enabled ? 443 : 8443
+  cluster_name    = "${var.namespace}-cluster"
+  redis_ui_port = local.ingress_enabled ? 443 : 8443
+  redis_ui_name = "ui-${local.cluster_name}"
+  redis_ui_host = "${local.redis_ui_name}.${var.domain_name}"
+  redis_ui_url = "https://${local.redis_ui_host}:${local.redis_ui_port}"
 }
 
 resource "helm_release" "redis_cluster" {
@@ -14,8 +18,13 @@ resource "helm_release" "redis_cluster" {
   dependency_update = true
   create_namespace  = true
   cleanup_on_fail   = true
+  timeout           = 600
 
   set = [
+    {
+      name  = "name"
+      value = local.cluster_name
+    },
     {
       name  = "license"
       value = var.license
@@ -73,6 +82,38 @@ resource "helm_release" "redis_cluster" {
       value = var.external_secret_cluster_key
     }
   ]
+}
+
+resource "kubernetes_ingress_v1" "cluster_ui" {
+  wait_for_load_balancer = true
+  metadata {
+    name      = local.redis_ui_name
+    namespace = var.namespace
+    annotations = {
+      "ingress.kubernetes.io/ssl-passthrough" = "true"
+    }
+  }
+  spec {
+    ingress_class_name = "haproxy"
+    rule {
+      host = local.redis_ui_host
+      http {
+        path {
+          path = "/"
+          path_type = "ImplementationSpecific"
+          backend {
+            service {
+              name = "${local.cluster_name}-ui"
+              port {
+                number = 8443
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  depends_on = [helm_release.redis_cluster]
 }
 
 resource "kubernetes_manifest" "monitoring" {
@@ -145,7 +186,7 @@ resource "helm_release" "redb_database" {
     },
     {
       name = "cluster"
-      value = "${var.namespace}-cluster"
+      value = local.cluster_name
     },
     {
       name  = "memory"
@@ -212,7 +253,7 @@ resource "helm_release" "rdidb_database" {
     },
     {
       name = "cluster"
-      value = "${var.namespace}-cluster"
+      value = local.cluster_name
     },
     {
       name  = "memory"
@@ -256,7 +297,7 @@ resource "helm_release" "rdidb_database" {
 
 data "kubernetes_secret_v1" "redis_cluster_secret" {
   metadata {
-    name      = "${var.namespace}-cluster"
+    name      = local.cluster_name
     namespace = var.namespace
   }
   depends_on = [helm_release.rdidb_database]

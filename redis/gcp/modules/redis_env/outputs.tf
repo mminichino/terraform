@@ -5,6 +5,10 @@ output "cluster_password" {
   sensitive = true
 }
 
+output "cluster_url" {
+  value = local.redis_ui_url
+}
+
 output "redb_password" {
   value     = random_string.redb_password.id
   sensitive = true
