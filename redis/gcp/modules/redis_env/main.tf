@@ -6,13 +6,14 @@ locals {
 }
 
 resource "helm_release" "redis_cluster" {
-  name             = var.namespace
-  namespace        = var.namespace
-  repository       = "https://mminichino.github.io/helm-charts"
-  chart            = "redis-cluster"
-  version          = var.chart_version
-  create_namespace = true
-  cleanup_on_fail  = true
+  name              = var.namespace
+  namespace         = var.namespace
+  repository        = "https://mminichino.github.io/helm-charts"
+  chart             = "redis-cluster"
+  version           = var.chart_version
+  dependency_update = true
+  create_namespace  = true
+  cleanup_on_fail   = true
 
   set = [
     {
