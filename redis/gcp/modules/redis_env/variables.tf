@@ -12,7 +12,7 @@ variable "cluster_chart_version" {
 
 variable "database_chart_version" {
   type    = string
-  default = "0.1.22"
+  default = "0.1.23"
 }
 
 variable "domain_name" {
