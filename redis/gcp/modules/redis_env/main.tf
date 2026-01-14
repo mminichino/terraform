@@ -9,16 +9,24 @@ locals {
   redis_ui_url = "https://${local.redis_ui_host}:${local.redis_ui_port}"
 }
 
+resource "helm_release" "redis_operator" {
+  name             = "${var.namespace}-operator"
+  namespace        = var.namespace
+  repository       = "https://helm.redis.io"
+  chart            = "redis-enterprise-operator"
+  version          = var.operator_version
+  create_namespace = true
+  cleanup_on_fail  = true
+}
+
 resource "helm_release" "redis_cluster" {
-  name              = var.namespace
+  name              = "${var.namespace}-cluster"
   namespace         = var.namespace
   repository        = "https://mminichino.github.io/helm-charts"
   chart             = "redis-cluster"
   version           = var.cluster_chart_version
   dependency_update = true
-  create_namespace  = true
   cleanup_on_fail   = true
-  timeout           = 600
 
   set = [
     {
@@ -82,6 +90,7 @@ resource "helm_release" "redis_cluster" {
       value = var.external_secret_cluster_key
     }
   ]
+  depends_on = [helm_release.redis_operator]
 }
 
 resource "kubernetes_manifest" "monitoring" {
@@ -135,7 +144,7 @@ resource "random_string" "redb_password" {
 }
 
 resource "helm_release" "redb_database" {
-  name             = "redb"
+  name             = "${var.namespace}-redb"
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-database"
@@ -202,7 +211,7 @@ resource "random_string" "rdidb_password" {
 }
 
 resource "helm_release" "rdidb_database" {
-  name             = "rdidb"
+  name             = "${var.namespace}-rdidb"
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-database"
