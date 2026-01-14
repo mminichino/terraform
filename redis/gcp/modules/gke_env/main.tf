@@ -78,6 +78,7 @@ resource "helm_release" "haproxy_ingress" {
   namespace        = "haproxy-ingress"
   repository       = "https://haproxytech.github.io/helm-charts"
   chart            = "kubernetes-ingress"
+  version          = "1.46.1"
   create_namespace = true
   cleanup_on_fail  = true
 
