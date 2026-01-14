@@ -201,7 +201,7 @@ resource "helm_release" "gcsm_store" {
   set = [
     {
       name  = "project"
-      value = data.google_project.current.id
+      value = data.google_project.current.project_id
     }
   ]
 
