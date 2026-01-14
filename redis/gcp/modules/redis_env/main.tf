@@ -84,38 +84,6 @@ resource "helm_release" "redis_cluster" {
   ]
 }
 
-resource "kubernetes_ingress_v1" "cluster_ui" {
-  wait_for_load_balancer = true
-  metadata {
-    name      = local.redis_ui_name
-    namespace = var.namespace
-    annotations = {
-      "ingress.kubernetes.io/ssl-passthrough" = "true"
-    }
-  }
-  spec {
-    ingress_class_name = "haproxy"
-    rule {
-      host = local.redis_ui_host
-      http {
-        path {
-          path = "/"
-          path_type = "ImplementationSpecific"
-          backend {
-            service {
-              name = "${local.cluster_name}-ui"
-              port {
-                number = 8443
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  depends_on = [helm_release.redis_cluster]
-}
-
 resource "kubernetes_manifest" "monitoring" {
   manifest = {
     apiVersion = "monitoring.coreos.com/v1"
