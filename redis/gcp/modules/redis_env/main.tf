@@ -27,6 +27,7 @@ resource "helm_release" "redis_cluster" {
   version           = var.cluster_chart_version
   dependency_update = true
   cleanup_on_fail   = true
+  atomic            = true
 
   set = [
     {
@@ -151,6 +152,7 @@ resource "helm_release" "redb_database" {
   version          = var.database_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
+  atomic           = true
 
   set = [
     {
@@ -202,7 +204,7 @@ resource "helm_release" "redb_database" {
       value = var.external_secret_redb_key
     }
   ]
-  depends_on = [helm_release.redis_cluster]
+  depends_on = [kubernetes_manifest.monitoring]
 }
 
 resource "random_string" "rdidb_password" {
@@ -218,6 +220,7 @@ resource "helm_release" "rdidb_database" {
   version          = var.database_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
+  atomic           = true
 
   set = [
     {
@@ -269,7 +272,7 @@ resource "helm_release" "rdidb_database" {
       value = var.external_secret_rdidb_key
     }
   ]
-  depends_on = [helm_release.redis_cluster]
+  depends_on = [helm_release.redb_database]
 }
 
 data "kubernetes_secret_v1" "redis_cluster_secret" {
