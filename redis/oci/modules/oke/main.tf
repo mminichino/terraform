@@ -5,6 +5,7 @@ data "oci_identity_availability_domains" "ads" {
 }
 
 locals {
+  k8s_version = var.kubernetes_version
   ad_name = data.oci_identity_availability_domains.ads.availability_domains[0].name
   k8s_no_v = replace(local.k8s_version, "v", "")
   oke_x86_image_ids = [
@@ -19,15 +20,6 @@ locals {
   node_image_id = local.oke_x86_image_ids[0]
 }
 
-data "oci_containerengine_cluster_option" "oke_opts" {
-  cluster_option_id = "all"
-  compartment_id    = var.compartment_ocid
-}
-
-locals {
-  k8s_version = sort(data.oci_containerengine_cluster_option.oke_opts.kubernetes_versions)[length(data.oci_containerengine_cluster_option.oke_opts.kubernetes_versions) - 1]
-}
-
 data "oci_containerengine_node_pool_option" "np_opts" {
   node_pool_option_id  = "all"
   compartment_id       = var.compartment_ocid
@@ -39,7 +31,7 @@ resource "oci_containerengine_cluster" "oke" {
   name               = "${var.name}-oke-cluster"
   kubernetes_version = local.k8s_version
   vcn_id             = var.vcn_id
-  type               = "BASIC_CLUSTER"
+  type               = "ENHANCED_CLUSTER"
 
   endpoint_config {
     is_public_ip_enabled = true

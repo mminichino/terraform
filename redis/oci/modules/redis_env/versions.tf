@@ -8,10 +8,7 @@ terraform {
       source = "hashicorp/kubernetes"
       version = "3.0.1"
     }
-    oci = {
-      source = "oracle/oci"
-      version = "7.29.0"
-    }
   }
+
   required_version = ">= 0.14"
 }

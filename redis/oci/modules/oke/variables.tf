@@ -4,6 +4,11 @@ variable "name" {
   type = string
 }
 
+variable "kubernetes_version" {
+  type    = string
+  default = "v1.33.1"
+}
+
 variable "tenancy_ocid" {
   type = string
 }

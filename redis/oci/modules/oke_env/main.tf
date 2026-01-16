@@ -5,13 +5,25 @@ resource "random_string" "grafana_password" {
   special          = false
 }
 
+data "oci_identity_compartment" "compartment" {
+  id = var.compartment_ocid
+}
+
+resource "oci_identity_policy" "external_dns_policy" {
+  compartment_id = var.compartment_ocid
+  description    = "OKE External DNS Policy"
+  name           = "oke-external-dns"
+  statements     = ["Allow any-user to manage dns in compartment ${data.oci_identity_compartment.compartment.name} where all {request.principal.type='workload',request.principal.cluster_id='${var.cluster_ocid}',request.principal.service_account='external-dns'}"]
+}
+
 resource "helm_release" "external_dns" {
   name             = "external-dns"
   namespace        = "external-dns"
   repository       = "https://mminichino.github.io/helm-charts"
-  chart            = "external-dns-gke"
+  chart            = "external-dns-oci"
   create_namespace = true
   cleanup_on_fail  = true
+  # atomic           = true
 
   set = [
     {
@@ -73,6 +85,14 @@ resource "helm_release" "haproxy_ingress" {
     {
       name  = "controller.service.enablePorts.quic"
       value = false
+    },
+    {
+      name  = "controller.image.repository"
+      value = "docker.io/haproxytech/kubernetes-ingress"
+    },
+    {
+      name  = "controller.image.tag"
+      value = "3.1.15"
     }
   ]
 
@@ -118,6 +138,33 @@ resource "helm_release" "prometheus" {
   depends_on = [helm_release.haproxy_ingress]
 }
 
+resource "oci_identity_dynamic_group" "external_secrets_dg" {
+  compartment_id = var.tenancy_ocid
+  name           = "external-secrets-dg"
+  description    = "OKE workload identity for external-secrets"
+
+  matching_rule = <<-RULE
+ALL {
+  resource.type = 'pod',
+  resource.kubernetes.namespace = 'external-secrets',
+  resource.kubernetes.serviceaccount.name = 'external-secrets'
+}
+RULE
+}
+
+resource "oci_identity_policy" "external_secrets_policy" {
+  compartment_id = var.compartment_ocid
+  description    = "OKE External Secrets Policy"
+  name           = "oke-external-secrets"
+  statements     = [
+    "Allow dynamic-group external-secrets-dg to read secret-bundles in compartment ${data.oci_identity_compartment.compartment.name}",
+    "Allow dynamic-group external-secrets-dg to read secrets in compartment ${data.oci_identity_compartment.compartment.name}",
+    "Allow dynamic-group external-secrets-dg to read vaults in compartment ${data.oci_identity_compartment.compartment.name}",
+    "Allow dynamic-group external-secrets-dg to use keys in compartment ${data.oci_identity_compartment.compartment.name}"
+  ]
+  depends_on = [oci_identity_dynamic_group.external_secrets_dg]
+}
+
 resource "helm_release" "external_secrets" {
   name             = "external-secrets"
   namespace        = "external-secrets"
@@ -126,4 +173,26 @@ resource "helm_release" "external_secrets" {
   version          = "1.2.1"
   create_namespace = true
   cleanup_on_fail  = true
+}
+
+resource "helm_release" "oracle_vault_store" {
+  name             = "oracle-vault-store"
+  namespace        = "external-secrets"
+  repository       = "https://mminichino.github.io/helm-charts"
+  chart            = "oracle-vault-store"
+  version          = "0.1.1"
+  cleanup_on_fail  = true
+
+  set = [
+    {
+      name  = "vault"
+      value = var.vault_ocid
+    },
+    {
+      name  = "region"
+      value = var.region
+    }
+  ]
+
+  depends_on = [helm_release.external_secrets]
 }
