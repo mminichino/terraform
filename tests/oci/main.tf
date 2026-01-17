@@ -75,7 +75,6 @@ module "oke_env" {
   compartment_ocid = var.compartment_ocid
   domain_name      = var.domain_name
   region           = var.region
-  tenancy_ocid     = var.tenancy_ocid
   vault_ocid       = var.vault_ocid
   cluster_ocid     = module.oke.cluster.ocid
 }
