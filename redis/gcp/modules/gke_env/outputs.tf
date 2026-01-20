@@ -14,7 +14,11 @@ output "grafana_ui" {
 }
 
 output "nginx_ingress_ip" {
-  value = local.nginx_ingress_ip
+  value = local.ingress_ip
+}
+
+output "ingress_ip" {
+  value = local.ingress_ip
 }
 
 output "gke_domain_name" {

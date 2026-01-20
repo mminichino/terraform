@@ -34,23 +34,28 @@ resource "kubernetes_cluster_role_binding_v1" "admin" {
 resource "helm_release" "external_dns" {
   name             = "external-dns"
   namespace        = "external-dns"
-  repository       = "https://mminichino.github.io/helm-charts"
-  chart            = "external-dns-gke"
+  repository       = "https://kubernetes-sigs.github.io/external-dns"
+  chart            = "external-dns"
   create_namespace = true
   cleanup_on_fail  = true
 
-  set = [
-    {
-      name  = "googleServiceAccount"
-      value = local.sa_email
-    }
-  ]
-
-  set_list = [
-    {
-      name  = "domainFilters"
-      value = [var.gke_domain_name]
-    }
+  values = [
+    yamlencode({
+      provider = {
+        name = "google"
+      }
+      extraArgs = {
+        "google-zone-visibility" = "public"
+      }
+      serviceAccount = {
+        name = "external-dns"
+        annotations = {
+          "iam.gke.io/gcp-service-account" = local.sa_email
+        }
+      }
+      txtOwnerId = "external-dns"
+      domainFilters = [var.gke_domain_name]
+    })
   ]
 }
 
@@ -82,27 +87,40 @@ resource "helm_release" "haproxy_ingress" {
   create_namespace = true
   cleanup_on_fail  = true
 
-  set = [
-    {
-      name  = "controller.replicaCount"
-      value = 2
-    },
-    {
-      name  = "controller.service.type"
-      value = "LoadBalancer"
-    },
-    {
-      name  = "controller.service.enablePorts.http"
-      value = true
-    },
-    {
-      name  = "controller.service.enablePorts.https"
-      value = true
-    },
-    {
-      name  = "controller.service.enablePorts.quic"
-      value = false
-    }
+  values = [
+    yamlencode({
+      controller = {
+        replicaCount = 2
+        service = {
+          type = "LoadBalancer"
+          enablePorts = {
+            http = true
+            https = true
+            quic = false
+          }
+          tcpPorts = [
+            {
+              name = "redis-12000"
+              port: 12000
+              targetPort: 12000
+              protocol = "TCP"
+            },
+            {
+              name = "redis-12001"
+              port: 12001
+              targetPort: 12001
+              protocol = "TCP"
+            },
+            {
+              name = "postgres"
+              port: 5432
+              targetPort: 5432
+              protocol = "TCP"
+            }
+          ]
+        }
+      }
+    })
   ]
 
   depends_on = [helm_release.cert_manager]
@@ -157,15 +175,15 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 
 # noinspection HILUnresolvedReference
 locals {
-  nginx_ingress_ip  = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
+  ingress_ip  = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
   ingress_zone_name = "ingress-${replace(var.gke_domain_name, ".", "-")}"
   ingress_dns_name  = "ingress.${var.gke_domain_name}"
 }
 
 resource "google_dns_managed_zone" "ingress" {
   name        = local.ingress_zone_name
-  dns_name    = "ingress.${var.gke_domain_name}."
-  description = "Zone for ingress.${var.gke_domain_name}"
+  dns_name    = "${local.ingress_dns_name}."
+  description = "Zone for ${local.ingress_dns_name}"
 
   provisioner "local-exec" {
     when    = destroy
@@ -175,10 +193,18 @@ resource "google_dns_managed_zone" "ingress" {
 
 resource "google_dns_record_set" "subdomain_ns_delegation" {
   name         = "${local.ingress_dns_name}."
-  managed_zone = replace(var.gke_domain_name, ".", "-")
+  managed_zone = local.ingress_zone_name
   type         = "NS"
   ttl          = 300
   rrdatas      = google_dns_managed_zone.ingress.name_servers
+}
+
+resource "google_dns_record_set" "ingress_hostname" {
+  name         = "haproxy.${local.ingress_dns_name}."
+  managed_zone = local.ingress_zone_name
+  type         = "A"
+  ttl          = 300
+  rrdatas      = [local.ingress_ip]
 }
 
 resource "helm_release" "external_secrets" {
