@@ -188,6 +188,14 @@ resource "helm_release" "redb_database" {
       value = 12000
     },
     {
+      name  = "ingress.type"
+      value = "haproxy"
+    },
+    {
+      name  = "dns.domain"
+      value = var.domain_name
+    },
+    {
       name  = "eviction"
       value = "noeviction"
     },
