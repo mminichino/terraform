@@ -41,6 +41,11 @@ resource "helm_release" "external_dns" {
 
   values = [
     yamlencode({
+      sources = [
+        "service",
+        "ingress",
+        "crd"
+      ]
       provider = {
         name = "google"
       }
