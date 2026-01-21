@@ -181,6 +181,7 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 # noinspection HILUnresolvedReference
 locals {
   ingress_ip  = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0.ip, null)
+  gke_zone_name     = replace(var.gke_domain_name, ".", "-")
   ingress_zone_name = "ingress-${replace(var.gke_domain_name, ".", "-")}"
   ingress_dns_name  = "ingress.${var.gke_domain_name}"
 }
@@ -198,7 +199,7 @@ resource "google_dns_managed_zone" "ingress" {
 
 resource "google_dns_record_set" "subdomain_ns_delegation" {
   name         = "${local.ingress_dns_name}."
-  managed_zone = local.ingress_zone_name
+  managed_zone = local.gke_zone_name
   type         = "NS"
   ttl          = 300
   rrdatas      = google_dns_managed_zone.ingress.name_servers
