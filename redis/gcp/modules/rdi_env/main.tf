@@ -67,6 +67,7 @@ resource "helm_release" "rdi_db_secrets" {
       value = var.target_key
     }
   ]
+  depends_on = [helm_release.rdi_sys_config]
 }
 
 resource "helm_release" "redis_di_cli" {
@@ -76,6 +77,7 @@ resource "helm_release" "redis_di_cli" {
   chart            = "redis-di-cli"
   version          = var.rdi_di_cli_version
   cleanup_on_fail  = true
+  depends_on       = [helm_release.rdi_db_secrets]
 }
 
 resource "helm_release" "rdi" {
@@ -256,4 +258,5 @@ resource "helm_release" "rdi" {
       }
     })
   ]
+  depends_on = [helm_release.redis_di_cli]
 }
