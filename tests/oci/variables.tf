@@ -1,5 +1,13 @@
 #
 
+variable "gcs_state_bucket" {
+  type = string
+}
+
+variable "credential_file" {
+  type = string
+}
+
 variable "name" {}
 variable "tenancy_ocid" {}
 variable "user_ocid" {}
