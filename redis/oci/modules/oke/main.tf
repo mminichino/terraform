@@ -114,11 +114,11 @@ data "oci_containerengine_cluster_kube_config" "cluster_kube_config" {
 
 # noinspection HILUnresolvedReference
 locals {
-  kubeconfig             = yamldecode(data.oci_containerengine_cluster_kube_config.cluster_kube_config.content)
-  kube_cluster           = local.kubeconfig.clusters[0].cluster
-  kube_user_exec         = local.kubeconfig.users[0].user.exec
-  api_host               = local.kube_cluster.server
-  cluster_ca_certificate = base64decode(local.kube_cluster["certificate-authority-data"])
+  oke_kubeconfig         = yamldecode(data.oci_containerengine_cluster_kube_config.cluster_kube_config.content)
+  api_host               = local.oke_kubeconfig.clusters[0].cluster.server
+  cluster_ca_data        = local.oke_kubeconfig.clusters[0].cluster["certificate-authority-data"]
+  cluster_ca_certificate = base64decode(local.oke_kubeconfig.clusters[0].cluster["certificate-authority-data"])
+  kube_user_exec         = local.oke_kubeconfig.users[0].user.exec
   exec_api_version       = local.kube_user_exec.apiVersion
   exec_command           = local.kube_user_exec.command
   exec_args              = local.kube_user_exec.args

@@ -11,6 +11,10 @@ output "api_host" {
   value = local.api_host
 }
 
+output "cluster_ca_data" {
+  value = local.cluster_ca_data
+}
+
 output "cluster_ca_certificate" {
   value = local.cluster_ca_certificate
 }
