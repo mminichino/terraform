@@ -2,12 +2,6 @@
 
 data "rediscloud_payment_method" "card" {}
 
-data "rediscloud_cloud_account" "account" {
-  exclude_internal_account = true
-  provider_type            = var.cloud
-  name                     = var.account_name
-}
-
 resource "rediscloud_subscription" "subscription" {
 
   name              = "${var.name}-sub"
@@ -15,7 +9,7 @@ resource "rediscloud_subscription" "subscription" {
   payment_method_id = data.rediscloud_payment_method.card.id
 
   cloud_provider {
-    provider = data.rediscloud_cloud_account.account.provider_type
+    provider = var.cloud
     region {
       region                     = var.region
       networking_deployment_cidr = var.cidr
