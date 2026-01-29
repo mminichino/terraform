@@ -5,9 +5,9 @@ data "oci_identity_availability_domains" "ads" {
 }
 
 locals {
-  k8s_version = var.kubernetes_version
-  ad_name = data.oci_identity_availability_domains.ads.availability_domains[0].name
-  k8s_no_v = replace(local.k8s_version, "v", "")
+  k8s_version       = var.kubernetes_version
+  ad_name           = data.oci_identity_availability_domains.ads.availability_domains[0].name
+  k8s_no_v          = replace(local.k8s_version, "v", "")
   oke_x86_image_ids = [
     for s in data.oci_containerengine_node_pool_option.np_opts.sources : s.image_id
     if (
@@ -18,6 +18,7 @@ locals {
     )
   ]
   node_image_id = local.oke_x86_image_ids[0]
+  cluster_name  = "${var.name}-oke-cluster"
 }
 
 data "oci_containerengine_node_pool_option" "np_opts" {
@@ -28,7 +29,7 @@ data "oci_containerengine_node_pool_option" "np_opts" {
 
 resource "oci_containerengine_cluster" "oke" {
   compartment_id     = var.compartment_ocid
-  name               = "${var.name}-oke-cluster"
+  name               = local.cluster_name
   kubernetes_version = local.k8s_version
   vcn_id             = var.vcn_id
   type               = "ENHANCED_CLUSTER"
