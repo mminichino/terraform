@@ -40,3 +40,18 @@ variable "node_subnet_id" {
 variable "pod_subnet_id" {
   type = string
 }
+
+variable "node_ocpu" {
+  type    = number
+  default = 4
+}
+
+variable "node_memory" {
+  type    = number
+  default = 32
+}
+
+variable "node_count" {
+  type    = number
+  default = 3
+}

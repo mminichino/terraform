@@ -80,8 +80,8 @@ resource "oci_containerengine_node_pool" "workers" {
   }
 
   node_shape_config {
-    ocpus         = 4
-    memory_in_gbs = 32
+    ocpus         = var.node_ocpu
+    memory_in_gbs = var.node_memory
   }
 
   node_source_details {
@@ -91,7 +91,7 @@ resource "oci_containerengine_node_pool" "workers" {
   }
 
   node_config_details {
-    size = 3
+    size = var.node_count
 
     placement_configs {
       availability_domain = local.ad_name
