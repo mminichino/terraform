@@ -47,6 +47,26 @@ resource "oci_containerengine_cluster" "oke" {
   }
 }
 
+locals {
+  cloud_init_disable_short_name_enforcement = <<-EOT
+  #!/bin/bash
+  set -euo pipefail
+
+  mkdir -p /etc/crio/crio.conf.d
+  cat > /etc/crio/crio.conf.d/11-default.conf <<'EOF'
+  [crio]
+    [crio.image]
+      short_name_mode="disabled"
+  EOF
+
+  curl --fail -H "Authorization: Bearer Oracle" -L0 \
+    http://169.254.169.254/opc/v2/instance/metadata/oke_init_script \
+    | base64 --decode > /var/run/oke-init.sh
+
+  sudo bash /var/run/oke-init.sh
+  EOT
+}
+
 resource "oci_containerengine_node_pool" "workers" {
   compartment_id     = var.compartment_ocid
   cluster_id         = oci_containerengine_cluster.oke.id
@@ -54,6 +74,10 @@ resource "oci_containerengine_node_pool" "workers" {
   kubernetes_version = local.k8s_version
 
   node_shape = "VM.Standard.E4.Flex"
+
+  node_metadata = {
+    user_data = base64encode(local.cloud_init_disable_short_name_enforcement)
+  }
 
   node_shape_config {
     ocpus         = 4
