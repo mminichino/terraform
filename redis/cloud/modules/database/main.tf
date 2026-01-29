@@ -15,10 +15,4 @@ resource "rediscloud_subscription_database" "database" {
   replication                  = var.replication
   password                     = random_string.password.id
   tags                         = var.tags
-
-  modules = [
-      for name in var.modules : {
-      name = name
-    }
-  ]
 }
