@@ -14,6 +14,10 @@ variable "cloud" {
   }
 }
 
+variable "account_name" {
+  type = string
+}
+
 variable "region" {
   default = "us-east-2"
 }

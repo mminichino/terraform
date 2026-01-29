@@ -5,6 +5,7 @@ data "rediscloud_payment_method" "card" {}
 data "rediscloud_cloud_account" "account" {
   exclude_internal_account = true
   provider_type            = var.cloud
+  name                     = var.account_name
 }
 
 resource "rediscloud_subscription" "subscription" {
