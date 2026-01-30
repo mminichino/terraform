@@ -83,6 +83,6 @@ locals {
 }
 
 resource "local_sensitive_file" "kubeconfig" {
-  filename = "~/.oci/${var.kubeconfig_filename}"
+  filename = pathexpand("~/.oci/${var.kubeconfig_filename}")
   content  = local.kubeconfig
 }
