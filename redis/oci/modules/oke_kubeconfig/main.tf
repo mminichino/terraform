@@ -53,7 +53,7 @@ data "kubernetes_secret_v1" "sa_token" {
 }
 
 locals {
-  bearer_token = base64decode(data.kubernetes_secret_v1.sa_token.data.token)
+  bearer_token = data.kubernetes_secret_v1.sa_token.data["token"]
 
   kubeconfig = yamlencode({
     apiVersion = "v1"
