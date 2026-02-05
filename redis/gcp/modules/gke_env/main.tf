@@ -193,7 +193,7 @@ resource "google_dns_managed_zone" "ingress" {
 
   provisioner "local-exec" {
     when    = destroy
-    command = "gcloud dns record-sets list --project ${self.project} --zone ${self.name} --filter=\"type=A OR type=TXT\" --format='value(name,type.list(separator=\",\"))' | xargs -r -n2 sh -c 'gcloud dns record-sets delete $0 --project ${self.project} --zone ${self.name} --type $1'"
+    command = "gcloud dns record-sets list --project ${self.project} --zone ${self.name} --filter=\"type=A OR type=TXT OR type=CNAME\" --format='value(name,type.list(separator=\",\"))' | xargs -r -n2 sh -c 'gcloud dns record-sets delete $0 --project ${self.project} --zone ${self.name} --type $1'"
   }
 }
 
