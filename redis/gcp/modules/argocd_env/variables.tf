@@ -7,7 +7,7 @@ variable "namespace" {
 
 variable "argocd_config_version" {
   type    = string
-  default = "0.1.1"
+  default = "0.1.2"
 }
 
 variable "repository" {
