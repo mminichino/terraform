@@ -25,6 +25,10 @@ provider "helm" {
   }
 }
 
+module "grafana" {
+  source                      = "../../redis/openshift/modules/grafana"
+}
+
 module "redis_env" {
   source                      = "../../redis/openshift/modules/redis_env"
   namespace                   = var.name
