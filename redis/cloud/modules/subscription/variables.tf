@@ -35,7 +35,7 @@ variable "max_db_size" {
 
 variable "db_quantity" {
   type = number
-  default = 4
+  default = 1
 }
 
 variable "throughput_measurement" {
