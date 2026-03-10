@@ -17,6 +17,7 @@ resource "helm_release" "redis_operator" {
   version          = var.operator_version
   create_namespace = true
   cleanup_on_fail  = true
+  atomic           = true
 }
 
 resource "helm_release" "redis_cluster" {

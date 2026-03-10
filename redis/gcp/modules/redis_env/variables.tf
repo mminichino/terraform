@@ -2,17 +2,17 @@
 
 variable "operator_version" {
   type    = string
-  default = "8.0.6-8"
+  default = "8.0.10-23"
 }
 
 variable "cluster_chart_version" {
   type    = string
-  default = "0.3.0"
+  default = "0.4.1"
 }
 
 variable "database_chart_version" {
   type    = string
-  default = "0.2.4"
+  default = "0.2.5"
 }
 
 variable "domain_name" {
