@@ -291,11 +291,3 @@ resource "helm_release" "rdidb_database" {
   ]
   depends_on = [helm_release.redb_database]
 }
-
-data "kubernetes_secret_v1" "redis_cluster_secret" {
-  metadata {
-    name      = local.cluster_name
-    namespace = var.namespace
-  }
-  depends_on = [helm_release.rdidb_database]
-}
