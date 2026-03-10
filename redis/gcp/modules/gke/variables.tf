@@ -40,7 +40,7 @@ variable "subnet_name" {
 
 variable "kubernetes_version" {
   type = string
-  default = "1.33.4"
+  default = "1.34.3"
 }
 
 variable "node_count" {
