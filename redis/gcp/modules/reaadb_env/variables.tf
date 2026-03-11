@@ -7,7 +7,7 @@ variable "name" {
 
 variable "reaadb_chart_version" {
   type    = string
-  default = "0.1.4"
+  default = "0.1.5"
 }
 
 variable "localDomain" {
