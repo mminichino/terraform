@@ -55,8 +55,12 @@ resource "helm_release" "reaadb_database" {
       value = var.port
     },
     {
-      name  = "dns.domain"
-      value = var.domain_name
+      name  = "dns.localDomain"
+      value = var.localDomain
+    },
+    {
+      name  = "dns.remoteDomain"
+      value = var.remoteDomain
     },
     {
       name  = "externalSecret.store.name"
