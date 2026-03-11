@@ -19,6 +19,10 @@ resource "helm_release" "reaadb_database" {
       value = var.username
     },
     {
+      name = "tls"
+      value = var.tls
+    },
+    {
       name = "localName"
       value = var.localName
     },
