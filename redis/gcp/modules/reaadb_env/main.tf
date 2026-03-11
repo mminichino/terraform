@@ -1,6 +1,6 @@
 #
 
-resource "helm_release" "redb_database" {
+resource "helm_release" "reaadb_database" {
   name             = "${var.namespace}-reaadb"
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
@@ -8,7 +8,6 @@ resource "helm_release" "redb_database" {
   version          = var.reaadb_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
-  atomic           = true
 
   set = [
     {
