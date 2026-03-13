@@ -72,6 +72,8 @@ resource "google_container_cluster" "kubernetes" {
 
   cluster_autoscaling {
     auto_provisioning_defaults {
+      disk_size = 128
+      disk_type = "pd-ssd"
       management {
         auto_upgrade = false
       }
