@@ -95,7 +95,7 @@ resource "google_container_node_pool" "worker_nodes" {
   location   = local.location
   cluster    = google_container_cluster.kubernetes.name
 
-  version = data.google_container_engine_versions.gke_version.latest_node_version
+  version = data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
   node_count = var.node_count
 
   autoscaling {
