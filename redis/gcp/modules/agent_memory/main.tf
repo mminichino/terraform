@@ -1,5 +1,6 @@
 #
 
+
 resource "helm_release" "agent_memory_server" {
   name             = "${var.namespace}-ams"
   namespace        = var.namespace
@@ -12,12 +13,20 @@ resource "helm_release" "agent_memory_server" {
 
   set = [
     {
-      name  = "redis.url"
-      value = var.redis_url
+      name  = "externalSecret.enabled"
+      value = var.external_secret_enabled
     },
     {
-      name = "openai.key"
-      value = var.openai_key
+      name  = "externalSecret.store.name"
+      value = var.external_secret_store
+    },
+    {
+      name = "externalSecret.keys.redis"
+      value = var.redis_secret_key
+    },
+    {
+      name = "externalSecret.keys.openai"
+      value = var.openai_secret_key
     }
   ]
 }
