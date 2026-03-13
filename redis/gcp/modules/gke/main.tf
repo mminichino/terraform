@@ -70,6 +70,14 @@ resource "google_container_cluster" "kubernetes" {
     enabled = true
   }
 
+  cluster_autoscaling {
+    auto_provisioning_defaults {
+      management {
+        auto_upgrade = false
+      }
+    }
+  }
+
   resource_labels = merge(var.labels, {
     name       = local.cluster_name
     managed_by = "terraform"
