@@ -59,15 +59,15 @@ resource "helm_release" "agent_memory_demo" {
     },
     {
       name = "externalSecret.keys.openai"
-      value = var.redis_secret_key
+      value = var.openai_secret_key
     },
     {
       name = "externalSecret.keys.tavily"
-      value = var.openai_secret_key
+      value = var.tavily_secret_key
     },
     {
       name = "externalSecret.keys.password"
-      value = var.openai_secret_key
+      value = var.password_secret_key
     }
   ]
   depends_on = [helm_release.agent_memory_server]
