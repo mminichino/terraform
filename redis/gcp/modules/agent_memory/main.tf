@@ -38,6 +38,7 @@ resource "helm_release" "agent_memory_demo" {
   version          = var.demo_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
+  atomic           = true
 
   set = [
     {
