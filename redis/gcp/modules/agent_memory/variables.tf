@@ -16,12 +16,10 @@ variable "namespace" {
 
 variable "server_url" {
   type    = string
-  default = ""
 }
 
 variable "domain_name" {
   type    = string
-  default = ""
 }
 
 variable "external_secret_enabled" {
@@ -35,20 +33,16 @@ variable "external_secret_store" {
 
 variable "redis_secret_key" {
   type    = string
-  default = ""
 }
 
 variable "password_secret_key" {
   type    = string
-  default = ""
 }
 
 variable "openai_secret_key" {
   type    = string
-  default = ""
 }
 
 variable "tavily_secret_key" {
   type    = string
-  default = ""
 }
