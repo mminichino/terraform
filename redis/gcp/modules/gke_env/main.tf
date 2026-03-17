@@ -117,6 +117,36 @@ resource "helm_release" "haproxy_ingress" {
               protocol = "TCP"
             },
             {
+              name = "redis-12002"
+              port: 12002
+              targetPort: 12002
+              protocol = "TCP"
+            },
+            {
+              name = "redis-12003"
+              port: 12003
+              targetPort: 12003
+              protocol = "TCP"
+            },
+            {
+              name = "redis-12012"
+              port: 12012
+              targetPort: 12012
+              protocol = "TCP"
+            },
+            {
+              name = "redis-12013"
+              port: 12013
+              targetPort: 12013
+              protocol = "TCP"
+            },
+            {
+              name = "redis-12014"
+              port: 12014
+              targetPort: 12014
+              protocol = "TCP"
+            },
+            {
               name = "postgres"
               port: 5432
               targetPort: 5432
