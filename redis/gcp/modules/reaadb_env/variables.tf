@@ -1,13 +1,13 @@
 #
 
-variable "name" {
-  type    = string
-  default = "reaadb"
-}
-
-variable "tls" {
-  type    = bool
-  default = true
+variable "databases" {
+  type = list(object({
+    name   = string
+    port   = number
+    memory = optional(string, "1GB")
+    shards = optional(number, 1)
+    tls    = optional(bool, false)
+  }))
 }
 
 variable "ingressEnabled" {
@@ -54,21 +54,6 @@ variable "localNamespace" {
 
 variable "remoteNamespace" {
   type    = string
-}
-
-variable "memory" {
-  type    = string
-  default = "1GB"
-}
-
-variable "port" {
-  type    = number
-  default = 12012
-}
-
-variable "shards" {
-  type    = number
-  default = 1
 }
 
 variable "external_secret_store" {

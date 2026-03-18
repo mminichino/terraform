@@ -7,79 +7,32 @@ resource "helm_release" "reaadb_database" {
   chart            = "active-active"
   cleanup_on_fail  = true
   wait_for_jobs    = true
+  atomic           = true
 
-  set = [
-    {
-      name  = "name"
-      value = var.name
-    },
-    {
-      name = "username"
-      value = var.username
-    },
-    {
-      name = "tls"
-      value = var.tls
-    },
-    {
-      name = "ingress.enabled"
-      value = var.ingressEnabled
-    },
-    {
-      name = "localName"
-      value = var.localName
-    },
-    {
-      name = "remoteName"
-      value = var.remoteName
-    },
-    {
-      name = "localClusterName"
-      value = var.localClusterName
-    },
-    {
-      name = "remoteClusterName"
-      value = var.remoteClusterName
-    },
-    {
-      name = "localNamespace"
-      value = var.localNamespace
-    },
-    {
-      name = "remoteNamespace"
-      value = var.remoteNamespace
-    },
-    {
-      name  = "memory"
-      value = var.memory
-    },
-    {
-      name  = "shards"
-      value = var.shards
-    },
-    {
-      name  = "port"
-      value = var.port
-    },
-    {
-      name  = "dns.localDomain"
-      value = var.localDomain
-    },
-    {
-      name  = "dns.remoteDomain"
-      value = var.remoteDomain
-    },
-    {
-      name  = "externalSecret.store.name"
-      value = var.external_secret_store
-    },
-    {
-      name  = "externalSecret.clusterKey"
-      value = var.cluster_key
-    },
-    {
-      name  = "externalSecret.databaseKey"
-      value = var.reaadb_key
-    }
+  values = [
+    yamlencode({
+      databases         = var.databases
+      username          = var.username
+      localName         = var.localName
+      remoteName        = var.remoteName
+      localClusterName  = var.localClusterName
+      remoteClusterName = var.remoteClusterName
+      localNamespace    = var.localNamespace
+      remoteNamespace   = var.remoteNamespace
+      ingress           = {
+        enabled = var.ingressEnabled
+      }
+      dns = {
+        localDomain  = var.localDomain
+        remoteDomain = var.remoteDomain
+      }
+      externalSecret = {
+        store = {
+          name = var.external_secret_store
+        }
+        clusterKey  = var.cluster_key
+        databaseKey = var.reaadb_key
+      }
+    })
   ]
 }
