@@ -96,6 +96,9 @@ resource "helm_release" "haproxy_ingress" {
     yamlencode({
       controller = {
         replicaCount = 2
+        extraArgs = {
+          "allow-cross-namespace" = ""
+        }
         service = {
           type = "LoadBalancer"
           enablePorts = {
