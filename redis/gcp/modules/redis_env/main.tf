@@ -319,7 +319,7 @@ resource "helm_release" "redis_insight" {
       value = var.domain_name
     },
     {
-      name  = "tls"
+      name  = "tls.enabled"
       value = true
     }
   ]
