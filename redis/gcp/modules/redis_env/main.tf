@@ -300,7 +300,7 @@ resource "random_string" "redis_insight_password" {
 resource "helm_release" "redis_insight" {
   name             = "${var.namespace}-insight"
   namespace        = var.namespace
-  repository       = "https://helm.redis.io"
+  repository       = "https://mminichino.github.io/helm-charts"
   chart            = "redis-insight"
   cleanup_on_fail  = true
   atomic           = true
