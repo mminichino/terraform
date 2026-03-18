@@ -2,11 +2,12 @@
 
 variable "databases" {
   type = list(object({
-    name   = string
-    port   = number
-    memory = optional(string, "1GB")
-    shards = optional(number, 1)
-    tls    = optional(bool, false)
+    name       = string
+    port       = number
+    memory     = optional(string, "1GB")
+    shards     = optional(number, 1)
+    tls        = optional(bool, false)
+    ossCluster = optional(bool, false)
   }))
 }
 
