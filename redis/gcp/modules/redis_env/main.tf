@@ -291,3 +291,37 @@ resource "helm_release" "rdidb_database" {
   ]
   depends_on = [helm_release.redb_database]
 }
+
+resource "random_string" "redis_insight_password" {
+  length           = 16
+  special          = false
+}
+
+resource "helm_release" "redis_insight" {
+  name             = "${var.namespace}-insight"
+  namespace        = var.namespace
+  repository       = "https://helm.redis.io"
+  chart            = "redis-insight"
+  cleanup_on_fail  = true
+  atomic           = true
+
+  set = [
+    {
+      name  = "ingress.enabled"
+      value = true
+    },
+    {
+      name  = "ingress.password"
+      value = random_string.redis_insight_password.id
+    },
+    {
+      name  = "dns.domain"
+      value = var.domain_name
+    },
+    {
+      name  = "tls"
+      value = true
+    }
+  ]
+  depends_on = [helm_release.redis_cluster]
+}
