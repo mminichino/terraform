@@ -5,7 +5,6 @@ resource "helm_release" "agent_memory_server" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/redis-agent-memory-demo"
   chart            = "agent-memory-server"
-  version          = var.server_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
   atomic           = true
@@ -35,7 +34,6 @@ resource "helm_release" "agent_memory_demo" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/redis-agent-memory-demo"
   chart            = "agent-memory-demo"
-  version          = var.demo_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
   atomic           = true

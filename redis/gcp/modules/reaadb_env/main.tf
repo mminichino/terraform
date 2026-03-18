@@ -5,7 +5,6 @@ resource "helm_release" "reaadb_database" {
   namespace        = var.namespace
   repository       = "https://mminichino.github.io/helm-charts"
   chart            = "active-active"
-  version          = var.reaadb_chart_version
   cleanup_on_fail  = true
   wait_for_jobs    = true
 
@@ -21,6 +20,10 @@ resource "helm_release" "reaadb_database" {
     {
       name = "tls"
       value = var.tls
+    },
+    {
+      name = "ingress.enabled"
+      value = var.ingressEnabled
     },
     {
       name = "localName"

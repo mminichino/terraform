@@ -1,15 +1,5 @@
 #
 
-variable "server_chart_version" {
-  type    = string
-  default = "0.1.3"
-}
-
-variable "demo_chart_version" {
-  type    = string
-  default = "0.1.3"
-}
-
 variable "namespace" {
   type    = string
 }

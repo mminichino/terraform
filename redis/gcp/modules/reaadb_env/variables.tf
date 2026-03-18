@@ -5,12 +5,12 @@ variable "name" {
   default = "reaadb"
 }
 
-variable "reaadb_chart_version" {
-  type    = string
-  default = "0.2.1"
+variable "tls" {
+  type    = bool
+  default = true
 }
 
-variable "tls" {
+variable "ingressEnabled" {
   type    = bool
   default = true
 }
