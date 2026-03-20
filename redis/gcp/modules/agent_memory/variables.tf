@@ -1,5 +1,15 @@
 #
 
+variable "server_chart_version" {
+  type    = string
+  default = "0.2.0"
+}
+
+variable "demo_chart_version" {
+  type    = string
+  default = "0.1.4"
+}
+
 variable "namespace" {
   type    = string
 }
