@@ -6,7 +6,7 @@ data "google_container_engine_versions" "gke_version" {
 }
 
 locals {
-  node_version = var.node_version != null ? var.node_version : data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
+  node_version = var.node_version != null ? var.node_version : data.google_container_engine_versions.gke_version.release_channel_latest_version["STABLE"]
 }
 
 data "google_client_openid_userinfo" "current" {}
@@ -82,6 +82,10 @@ resource "google_container_cluster" "kubernetes" {
         auto_upgrade = false
       }
     }
+  }
+
+  release_channel {
+    channel = "UNSPECIFIED"
   }
 
   resource_labels = merge(var.labels, {
