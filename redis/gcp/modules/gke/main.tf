@@ -5,6 +5,12 @@ data "google_container_engine_versions" "gke_version" {
   location = var.gcp_region
 }
 
+locals {
+  node_version = var.node_version != null
+    ? var.node_version
+    : data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
+}
+
 data "google_client_openid_userinfo" "current" {}
 
 data "google_compute_zones" "zones" {
@@ -95,12 +101,16 @@ resource "google_container_node_pool" "worker_nodes" {
   location   = local.location
   cluster    = google_container_cluster.kubernetes.name
 
-  version = data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
+  version = local.node_version
   node_count = var.node_count
 
   autoscaling {
     min_node_count = var.node_count
     max_node_count = var.max_node_count
+  }
+
+  management {
+    auto_upgrade = false
   }
 
   node_config {

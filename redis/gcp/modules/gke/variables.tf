@@ -43,6 +43,11 @@ variable "kubernetes_version" {
   default = "1.34.4"
 }
 
+variable "node_version" {
+  type    = string
+  default = null
+}
+
 variable "node_count" {
   description = "The number of nodes in the GKE cluster's node pool."
   type        = number
