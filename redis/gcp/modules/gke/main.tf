@@ -6,9 +6,7 @@ data "google_container_engine_versions" "gke_version" {
 }
 
 locals {
-  node_version = var.node_version != null
-    ? var.node_version
-    : data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
+  node_version = var.node_version != null ? var.node_version : data.google_container_engine_versions.gke_version.release_channel_latest_version["REGULAR"]
 }
 
 data "google_client_openid_userinfo" "current" {}
