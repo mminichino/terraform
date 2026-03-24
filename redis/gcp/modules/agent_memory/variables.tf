@@ -2,37 +2,28 @@
 
 variable "server_chart_version" {
   type    = string
-  default = "0.2.0"
+  default = "0.2.1"
 }
 
 variable "demo_chart_version" {
   type    = string
-  default = "0.2.3"
+  default = "0.2.5"
 }
 
 variable "namespace" {
   type    = string
 }
 
-variable "server_service" {
+variable "redis_service" {
   type    = string
 }
 
-variable "server_namespace" {
+variable "redis_port" {
   type    = string
-}
-
-variable "server_port" {
-  type    = number
 }
 
 variable "domain_name" {
   type    = string
-}
-
-variable "external_secret_enabled" {
-  type    = bool
-  default = true
 }
 
 variable "external_secret_store" {

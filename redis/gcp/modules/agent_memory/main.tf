@@ -12,15 +12,19 @@ resource "helm_release" "agent_memory_server" {
 
   set = [
     {
-      name  = "externalSecret.enabled"
-      value = var.external_secret_enabled
+      name = "redis.service"
+      value = var.redis_service
+    },
+    {
+      name = "redis.port"
+      value = var.redis_port
     },
     {
       name  = "externalSecret.store.name"
       value = var.external_secret_store
     },
     {
-      name = "externalSecret.keys.redis"
+      name = "externalSecret.keys.password"
       value = var.redis_secret_key
     },
     {
@@ -46,22 +50,6 @@ resource "helm_release" "agent_memory_demo" {
       value = var.domain_name
     },
     {
-      name = "server.service"
-      value = var.server_service
-    },
-    {
-      name = "server.namespace"
-      value = var.server_namespace
-    },
-    {
-      name = "server.port"
-      value = var.server_port
-    },
-    {
-      name  = "externalSecret.enabled"
-      value = var.external_secret_enabled
-    },
-    {
       name  = "externalSecret.store.name"
       value = var.external_secret_store
     },
@@ -76,10 +64,6 @@ resource "helm_release" "agent_memory_demo" {
     {
       name = "externalSecret.keys.password"
       value = var.password_secret_key
-    },
-    {
-      name = "externalSecret.keys.redis"
-      value = var.redis_secret_key
     }
   ]
   depends_on = [helm_release.agent_memory_server]
