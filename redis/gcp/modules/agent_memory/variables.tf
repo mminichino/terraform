@@ -19,7 +19,7 @@ variable "redis_service" {
 }
 
 variable "redis_port" {
-  type    = string
+  type    = number
 }
 
 variable "domain_name" {
