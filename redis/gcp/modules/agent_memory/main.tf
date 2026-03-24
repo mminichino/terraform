@@ -46,8 +46,16 @@ resource "helm_release" "agent_memory_demo" {
       value = var.domain_name
     },
     {
-      name = "server.url"
-      value = var.server_url
+      name = "server.service"
+      value = var.server_service
+    },
+    {
+      name = "server.namespace"
+      value = var.server_namespace
+    },
+    {
+      name = "server.port"
+      value = var.server_port
     },
     {
       name  = "externalSecret.enabled"
@@ -68,6 +76,10 @@ resource "helm_release" "agent_memory_demo" {
     {
       name = "externalSecret.keys.password"
       value = var.password_secret_key
+    },
+    {
+      name = "externalSecret.keys.redis"
+      value = var.redis_secret_key
     }
   ]
   depends_on = [helm_release.agent_memory_server]

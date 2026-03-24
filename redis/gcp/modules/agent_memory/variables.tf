@@ -7,15 +7,23 @@ variable "server_chart_version" {
 
 variable "demo_chart_version" {
   type    = string
-  default = "0.1.4"
+  default = "0.2.2"
 }
 
 variable "namespace" {
   type    = string
 }
 
-variable "server_url" {
+variable "server_service" {
   type    = string
+}
+
+variable "server_namespace" {
+  type    = string
+}
+
+variable "server_port" {
+  type    = number
 }
 
 variable "domain_name" {
