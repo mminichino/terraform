@@ -25,7 +25,8 @@ module "vpc" {
   source     = "../../../../redis/aws/modules/vpc"
   name       = "usc1-${var.name}"
   aws_region = var.aws_region
-  cidr_block = "10.82.0.0/16"
+  cidr_block = var.cidr_block
+  tags       = var.tags
 }
 
 module "eks" {
@@ -41,6 +42,7 @@ module "eks" {
   instance_types          = var.eks_instance_types
   storage_class_name      = var.eks_storage_class_name
   endpoint_public_access  = var.eks_endpoint_public_access
+  tags                    = var.tags
   depends_on              = [module.vpc]
 }
 

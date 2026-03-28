@@ -14,7 +14,7 @@ resource "aws_route53_zone" "cluster" {
   name          = "${local.cluster_domain}."
   force_destroy = true
 
-  tags = merge(var.labels, {
+  tags = merge(var.tags, {
     Name       = "${local.cluster_name}-dns"
     managed_by = "terraform"
   })
@@ -56,11 +56,6 @@ data "aws_iam_policy_document" "eks_cluster_assume" {
 resource "aws_iam_role" "cluster" {
   name               = "${var.name}-eks-cluster"
   assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume.json
-
-  tags = merge(var.labels, {
-    Name       = "${local.cluster_name}-cluster-role"
-    managed_by = "terraform"
-  })
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
@@ -87,11 +82,6 @@ data "aws_iam_policy_document" "eks_node_assume" {
 resource "aws_iam_role" "node" {
   name               = "${var.name}-eks-node"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume.json
-
-  tags = merge(var.labels, {
-    Name       = "${local.cluster_name}-node-role"
-    managed_by = "terraform"
-  })
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodePolicy" {
@@ -122,7 +112,7 @@ resource "aws_eks_cluster" "kubernetes" {
 
   enabled_cluster_log_types = []
 
-  tags = merge(var.labels, {
+  tags = merge(var.tags, {
     Name       = local.cluster_name
     managed_by = "terraform"
   })
@@ -154,7 +144,7 @@ resource "aws_eks_node_group" "worker_nodes" {
     max_unavailable = 1
   }
 
-  tags = merge(var.labels, {
+  tags = merge(var.tags, {
     Name       = "${var.name}-node-pool"
     managed_by = "terraform"
   })
@@ -182,7 +172,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
   # noinspection HILUnresolvedReference
   url             = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
 
-  tags = merge(var.labels, {
+  tags = merge(var.tags, {
     Name       = "${local.cluster_name}-oidc"
     managed_by = "terraform"
   })
@@ -196,7 +186,7 @@ resource "aws_eks_access_entry" "cluster_admin" {
   type              = "STANDARD"
   kubernetes_groups = []
 
-  tags = var.labels
+  tags = var.tags
 }
 
 resource "aws_eks_access_policy_association" "cluster_admin" {

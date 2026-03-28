@@ -63,7 +63,7 @@ variable "endpoint_public_access" {
   default     = true
 }
 
-variable "labels" {
+variable "tags" {
   description = "Tags to apply to taggable resources."
   type        = map(string)
   default     = {}

@@ -1,5 +1,13 @@
 #
 
+variable "gcs_state_bucket" {
+  type = string
+}
+
+variable "credential_file" {
+  type = string
+}
+
 variable "name" {
   type        = string
   description = "Short environment name (used for VPC, EKS, and redis namespace)."
@@ -8,6 +16,11 @@ variable "name" {
 variable "aws_region" {
   type    = string
   default = "us-east-2"
+}
+
+variable "cidr_block" {
+  type    = string
+  default = "10.82.0.0/16"
 }
 
 variable "parent_hosted_zone_id" {
@@ -22,12 +35,12 @@ variable "kubernetes_version" {
 
 variable "node_count" {
   type    = number
-  default = 1
+  default = 3
 }
 
 variable "max_node_count" {
   type    = number
-  default = 3
+  default = 6
 }
 
 variable "min_node_count" {
@@ -37,7 +50,7 @@ variable "min_node_count" {
 
 variable "eks_instance_types" {
   type    = list(string)
-  default = ["m5.xlarge"]
+  default = ["m5.2xlarge"]
 }
 
 variable "eks_storage_class_name" {
@@ -70,4 +83,10 @@ variable "rdidb_key" {
 variable "license" {
   type    = string
   default = ""
+}
+
+variable "tags" {
+  description = "Optional tags"
+  type        = map(string)
+  default     = {}
 }
