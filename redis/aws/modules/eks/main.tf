@@ -11,7 +11,6 @@ locals {
     trimsuffix(data.aws_route53_zone.parent.name, "."),
   )
   cluster_domain = "${var.name}.${local.parent_domain_fqdn}"
-  subnet_ids_for_tags = sort(var.subnet_ids)
 }
 
 resource "aws_route53_zone" "cluster" {
@@ -40,15 +39,15 @@ resource "aws_route53_record" "cluster_ns_delegation" {
 }
 
 resource "aws_ec2_tag" "cluster_subnet_shared" {
-  count       = length(local.subnet_ids_for_tags)
-  resource_id = local.subnet_ids_for_tags[count.index]
+  count       = length(var.subnet_ids)
+  resource_id = var.subnet_ids[count.index]
   key         = "kubernetes.io/cluster/${local.cluster_name}"
   value       = "shared"
 }
 
 resource "aws_ec2_tag" "subnet_elb_role" {
-  count       = length(local.subnet_ids_for_tags)
-  resource_id = local.subnet_ids_for_tags[count.index]
+  count       = length(var.subnet_ids)
+  resource_id = var.subnet_ids[count.index]
   key         = "kubernetes.io/role/elb"
   value       = "1"
 }
@@ -127,22 +126,6 @@ resource "aws_eks_cluster" "kubernetes" {
 
   access_config {
     authentication_mode = "API"
-  }
-
-  compute_config {
-    enabled = true
-  }
-
-  kubernetes_network_config {
-    elastic_load_balancing {
-      enabled = true
-    }
-  }
-
-  storage_config {
-    block_storage {
-      enabled = true
-    }
   }
 
   vpc_config {

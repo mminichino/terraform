@@ -39,7 +39,7 @@ resource "aws_subnet" "subnets" {
   count                   = length(data.aws_availability_zones.zones.names)
   vpc_id                  = aws_vpc.vpc.id
   cidr_block              = cidrsubnet(aws_vpc.vpc.cidr_block, 8, count.index)
-  availability_zone       = data.aws_availability_zones.zones.names[count.index]
+  availability_zone       = sort(data.aws_availability_zones.zones.names)[count.index]
   map_public_ip_on_launch = true
   depends_on              = [aws_vpc.vpc]
 
