@@ -23,6 +23,8 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_caller_identity" "current" {}
+
 module "vpc" {
   source     = "../../../../redis/aws/modules/vpc"
   name       = var.name
@@ -32,11 +34,12 @@ module "vpc" {
 }
 
 module "eks" {
-  source                  = "../../../../redis/aws/modules/eks"
-  name                    = var.name
-  aws_region              = var.aws_region
-  parent_hosted_zone_id   = var.parent_hosted_zone_id
-  subnet_ids              = module.vpc.subnet_id_list
+  source                      = "../../../../redis/aws/modules/eks"
+  name                        = var.name
+  aws_region                  = var.aws_region
+  cluster_admin_principal_arn = data.aws_caller_identity.current.arn
+  parent_hosted_zone_id       = var.parent_hosted_zone_id
+  subnet_ids                  = module.vpc.subnet_id_list
   kubernetes_version      = var.kubernetes_version
   node_count              = var.node_count
   max_node_count          = var.max_node_count

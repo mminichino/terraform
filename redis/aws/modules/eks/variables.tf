@@ -1,7 +1,7 @@
 #
 
 variable "name" {
-  description = "Name prefix for the EKS cluster and related resources."
+  description = "Name prefix for the EKS cluster and related resources. Also forms the leftmost DNS label (cluster_domain = \"<name>.<parent>\"). Changing this after create replaces the cluster Route53 zone and tears down dependent eks_env resources."
   type        = string
   default     = "eks-cluster"
 }
@@ -11,9 +11,20 @@ variable "aws_region" {
   type        = string
 }
 
-variable "parent_hosted_zone_id" {
-  description = "Route53 hosted zone ID for the parent domain (delegates a subdomain for this cluster, matching the GKE DNS pattern)."
+variable "cluster_admin_principal_arn" {
+  description = "IAM principal ARN for EKS API access (AmazonEKSClusterAdminPolicy). Must be resolved in the root module (e.g. data.aws_caller_identity.current.arn), not via a data source inside this module, when module.eks uses depends_on = [module.vpc]; otherwise Terraform can defer the read until apply and replace aws_eks_access_entry every run (provider ForceNew on principal_arn)."
   type        = string
+}
+
+variable "parent_hosted_zone_id" {
+  description = "Route53 hosted zone ID for the parent domain (delegates a subdomain for this cluster, matching the GKE DNS pattern). Changing this replaces the cluster hosted zone if the new zone has a different domain name."
+  type        = string
+}
+
+variable "parent_domain_fqdn" {
+  description = "Optional. Parent DNS name without trailing dot (e.g. demo.example.com), must match parent_hosted_zone_id. When set, cluster_domain uses this instead of reading the zone name from the data source, so upgrades and provider behavior cannot drift the computed FQDN."
+  type        = string
+  default     = null
 }
 
 variable "subnet_ids" {
@@ -52,9 +63,15 @@ variable "instance_types" {
 }
 
 variable "storage_class_name" {
-  description = "Default storage class name passed through to env modules (matches the EKS default gp2 unless you install another StorageClass)."
+  description = "Storage class name passed to env modules (e.g. gp2). Built-in gp2/gp3 classes use provisioner ebs.csi.aws.com and require install_aws_ebs_csi_driver = true (default)."
   type        = string
   default     = "gp2"
+}
+
+variable "install_aws_ebs_csi_driver" {
+  description = "Install the amazonaws.com EKS add-on aws-ebs-csi-driver with IRSA so StorageClasses using ebs.csi.aws.com (default gp2) can provision volumes on managed node groups."
+  type        = bool
+  default     = true
 }
 
 variable "endpoint_public_access" {

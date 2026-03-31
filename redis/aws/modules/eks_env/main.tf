@@ -225,13 +225,13 @@ data "kubernetes_service_v1" "haproxy_ingress" {
 
 # noinspection HILUnresolvedReference
 locals {
-  lb_ingress = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0, null)
-  ingress_lb_ip_raw     = local.lb_ingress != null ? local.lb_ingress.ip : null
+  lb_ingress              = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0, null)
+  ingress_lb_ip_raw       = local.lb_ingress != null ? local.lb_ingress.ip : null
   ingress_lb_hostname_raw = local.lb_ingress != null ? local.lb_ingress.hostname : null
-  ingress_lb_ip         = local.ingress_lb_ip_raw != null && trimspace(local.ingress_lb_ip_raw) != "" ? trimspace(local.ingress_lb_ip_raw) : null
-  ingress_lb_hostname   = local.ingress_lb_hostname_raw != null && trimspace(local.ingress_lb_hostname_raw) != "" ? trimspace(local.ingress_lb_hostname_raw) : null
-  ingress_record_type   = local.ingress_lb_ip != null ? "A" : "CNAME"
-  ingress_record_value  = local.ingress_lb_ip != null ? local.ingress_lb_ip : local.ingress_lb_hostname
+  ingress_lb_ip           = local.ingress_lb_ip_raw != null && trimspace(local.ingress_lb_ip_raw) != "" ? trimspace(local.ingress_lb_ip_raw) : null
+  ingress_lb_hostname     = local.ingress_lb_hostname_raw != null && trimspace(local.ingress_lb_hostname_raw) != "" ? trimspace(local.ingress_lb_hostname_raw) : null
+  ingress_record_type  = local.ingress_lb_hostname != null ? "CNAME" : "A"
+  ingress_record_value = local.ingress_lb_hostname != null ? local.ingress_lb_hostname : local.ingress_lb_ip
 }
 
 resource "aws_route53_record" "ingress_hostname" {
@@ -322,12 +322,12 @@ resource "helm_release" "external_secrets" {
 }
 
 resource "helm_release" "aws_secret_store" {
-  name             = "aws-secret-store"
-  namespace        = "external-secrets"
-  repository       = "https://mminichino.github.io/helm-charts"
-  chart            = "aws-secret-store"
-  version          = "0.1.1"
-  cleanup_on_fail  = true
+  name            = "aws-secret-store"
+  namespace       = "external-secrets"
+  repository      = "https://mminichino.github.io/helm-charts"
+  chart           = "aws-secret-store"
+  version         = "0.1.1"
+  cleanup_on_fail = true
 
   set = [
     {

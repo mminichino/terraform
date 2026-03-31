@@ -50,7 +50,7 @@ output "storage_class" {
 output "oidc_issuer_url" {
   description = "OIDC issuer URL for IRSA trust policies."
   # noinspection HILUnresolvedReference
-  value       = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
+  value = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
 }
 
 output "oidc_provider_arn" {

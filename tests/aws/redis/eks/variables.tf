@@ -10,7 +10,7 @@ variable "credential_file" {
 
 variable "name" {
   type        = string
-  description = "Short environment name (used for VPC, EKS, and redis namespace)."
+  description = "Short environment name (VPC, EKS cluster, and DNS label cluster_domain = \"<name>.<parent>\"). Changing this replaces the cluster Route53 zone and eks_env. Use redis_kubernetes_namespace to name the Redis namespace without changing this."
 }
 
 variable "aws_region" {
@@ -26,6 +26,12 @@ variable "cidr_block" {
 variable "parent_hosted_zone_id" {
   type        = string
   description = "Route53 hosted zone ID for the parent domain (must already exist; EKS creates a delegated subdomain for the cluster under that zone)."
+}
+
+variable "parent_domain_fqdn" {
+  type        = string
+  default     = null
+  description = "Optional parent zone apex without trailing dot (e.g. demo.sa.example.com). When set, pins cluster DNS so it cannot drift from the Route53 data source; must match the zone for parent_hosted_zone_id."
 }
 
 variable "kubernetes_version" {

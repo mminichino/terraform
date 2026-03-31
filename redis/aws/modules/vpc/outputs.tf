@@ -13,5 +13,5 @@ output "vpc_cidr" {
 }
 
 output "subnet_id_list" {
-  value = aws_subnet.subnets.*.id
+  value = sort(aws_subnet.subnets.*.id)
 }

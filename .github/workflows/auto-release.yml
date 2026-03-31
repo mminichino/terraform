@@ -21,24 +21,53 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine next tag (patch bump)
+      - name: Determine next tag from .major / .minor
         id: bump
         shell: bash
         run: |
+          set -euo pipefail
+          if [[ ! -f .major || ! -f .minor ]]; then
+            echo "::error::Add version files .major and .minor (integers) in the repository root."
+            exit 1
+          fi
+          file_major=$(tr -d '[:space:]' < .major)
+          file_minor=$(tr -d '[:space:]' < .minor)
+          if [[ ! "$file_major" =~ ^[0-9]+$ ]] || [[ ! "$file_minor" =~ ^[0-9]+$ ]]; then
+            echo "::error::.major and .minor must contain non-negative integers."
+            exit 1
+          fi
+
           latest=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
           if [[ -z "$latest" ]]; then
-            next="v1.0.0"
+            next="v${file_major}.${file_minor}.0"
           else
             base="${latest#v}"
-            IFS='.' read -r major minor patch <<< "$base"
-            patch=$((patch + 1))
-            next="v${major}.${minor}.${patch}"
+            IFS='.' read -r tag_major tag_minor tag_patch <<< "$base"
+            if [[ "$tag_major" == "$file_major" && "$tag_minor" == "$file_minor" ]]; then
+              next_patch=$((tag_patch + 1))
+              next="v${file_major}.${file_minor}.${next_patch}"
+            else
+              next="v${file_major}.${file_minor}.0"
+            fi
           fi
+
           echo "latest_tag=${latest}" >> "$GITHUB_OUTPUT"
           echo "next_tag=${next}" >> "$GITHUB_OUTPUT"
-          echo "Next tag: ${next}"
+          echo "Next tag: ${next} (from .major=${file_major} .minor=${file_minor}, prior semver tag: ${latest:-none})"
 
-      - name: Create release (auto-adds source zip/tar.gz)
+      - name: Remove previous latest release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh release view latest --json tagName &>/dev/null; then
+            gh release delete latest --yes
+          fi
+          if git ls-remote --tags origin refs/tags/latest | grep -q .; then
+            git push origin :refs/tags/latest
+          fi
+
+      - name: Create semver release (auto-adds source zip/tar.gz)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -46,3 +75,12 @@ jobs:
             --target "${GITHUB_SHA}" \
             --generate-notes \
             --title "Release ${{ steps.bump.outputs.next_tag }}"
+
+      - name: Create latest release (alias)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create latest \
+            --target "${GITHUB_SHA}" \
+            --title "latest" \
+            --notes "Alias for ${{ steps.bump.outputs.next_tag }}."

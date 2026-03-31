@@ -21,6 +21,8 @@ provider "aws" {
   region = var.aws_region
 }
 
+data "aws_caller_identity" "current" {}
+
 module "vpc" {
   source     = "../../../../redis/aws/modules/vpc"
   name       = var.name
@@ -30,20 +32,22 @@ module "vpc" {
 }
 
 module "eks" {
-  source                  = "../../../../redis/aws/modules/eks"
-  name                    = var.name
-  aws_region              = var.aws_region
-  parent_hosted_zone_id   = var.parent_hosted_zone_id
-  subnet_ids              = module.vpc.subnet_id_list
-  kubernetes_version      = var.kubernetes_version
-  node_count              = var.node_count
-  max_node_count          = var.max_node_count
-  min_node_count          = var.min_node_count
-  instance_types          = var.eks_instance_types
-  storage_class_name      = var.eks_storage_class_name
-  endpoint_public_access  = var.eks_endpoint_public_access
-  tags                    = var.tags
-  depends_on              = [module.vpc]
+  source                      = "../../../../redis/aws/modules/eks"
+  name                        = var.name
+  aws_region                  = var.aws_region
+  cluster_admin_principal_arn = data.aws_caller_identity.current.arn
+  parent_hosted_zone_id       = var.parent_hosted_zone_id
+  parent_domain_fqdn          = var.parent_domain_fqdn
+  subnet_ids                  = module.vpc.subnet_id_list
+  kubernetes_version          = var.kubernetes_version
+  node_count                  = var.node_count
+  max_node_count              = var.max_node_count
+  min_node_count              = var.min_node_count
+  instance_types              = var.eks_instance_types
+  storage_class_name          = var.eks_storage_class_name
+  endpoint_public_access      = var.eks_endpoint_public_access
+  tags                        = var.tags
+  depends_on                  = [module.vpc]
 }
 
 provider "kubernetes" {
@@ -71,15 +75,15 @@ provider "helm" {
 }
 
 module "eks_env" {
-  source                   = "../../../../redis/aws/modules/eks_env"
-  eks_domain_name          = module.eks.cluster_domain
-  eks_storage_class        = module.eks.storage_class
-  cluster_hosted_zone_id   = module.eks.cluster_hosted_zone_id
-  aws_region               = var.aws_region
-  oidc_provider_arn        = module.eks.oidc_provider_arn
-  oidc_issuer_hostpath     = module.eks.oidc_issuer_hostpath
+  source                     = "../../../../redis/aws/modules/eks_env"
+  eks_domain_name            = module.eks.cluster_domain
+  eks_storage_class          = module.eks.storage_class
+  cluster_hosted_zone_id     = module.eks.cluster_hosted_zone_id
+  aws_region                 = var.aws_region
+  oidc_provider_arn          = module.eks.oidc_provider_arn
+  oidc_issuer_hostpath       = module.eks.oidc_issuer_hostpath
   external_dns_chart_version = var.external_dns_chart_version
-  depends_on               = [module.eks]
+  depends_on                 = [module.eks]
 }
 
 module "redis_env" {

@@ -321,6 +321,10 @@ resource "helm_release" "redis_insight" {
     {
       name  = "tls.enabled"
       value = true
+    },
+    {
+      name  = "storageClass"
+      value = "gp2"
     }
   ]
   depends_on = [helm_release.redis_cluster]

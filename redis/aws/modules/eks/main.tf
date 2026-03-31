@@ -5,9 +5,13 @@ data "aws_route53_zone" "parent" {
 }
 
 locals {
-  cluster_name       = "${var.name}-eks"
-  parent_domain_fqdn = trimsuffix(data.aws_route53_zone.parent.name, ".")
-  cluster_domain     = "${var.name}.${local.parent_domain_fqdn}"
+  cluster_name = "${var.name}-eks"
+  parent_domain_fqdn = coalesce(
+    var.parent_domain_fqdn,
+    trimsuffix(data.aws_route53_zone.parent.name, "."),
+  )
+  cluster_domain = "${var.name}.${local.parent_domain_fqdn}"
+  subnet_ids_for_tags = sort(var.subnet_ids)
 }
 
 resource "aws_route53_zone" "cluster" {
@@ -18,6 +22,13 @@ resource "aws_route53_zone" "cluster" {
     Name       = "${local.cluster_name}-dns"
     managed_by = "terraform"
   })
+
+  lifecycle {
+    precondition {
+      condition     = var.parent_domain_fqdn == null || trimsuffix(data.aws_route53_zone.parent.name, ".") == var.parent_domain_fqdn
+      error_message = "parent_domain_fqdn must exactly match the domain name of the Route 53 zone identified by parent_hosted_zone_id."
+    }
+  }
 }
 
 resource "aws_route53_record" "cluster_ns_delegation" {
@@ -29,15 +40,15 @@ resource "aws_route53_record" "cluster_ns_delegation" {
 }
 
 resource "aws_ec2_tag" "cluster_subnet_shared" {
-  count       = length(var.subnet_ids)
-  resource_id = var.subnet_ids[count.index]
+  count       = length(local.subnet_ids_for_tags)
+  resource_id = local.subnet_ids_for_tags[count.index]
   key         = "kubernetes.io/cluster/${local.cluster_name}"
   value       = "shared"
 }
 
 resource "aws_ec2_tag" "subnet_elb_role" {
-  count       = length(var.subnet_ids)
-  resource_id = var.subnet_ids[count.index]
+  count       = length(local.subnet_ids_for_tags)
+  resource_id = local.subnet_ids_for_tags[count.index]
   key         = "kubernetes.io/role/elb"
   value       = "1"
 }
@@ -118,6 +129,22 @@ resource "aws_eks_cluster" "kubernetes" {
     authentication_mode = "API"
   }
 
+  compute_config {
+    enabled = true
+  }
+
+  kubernetes_network_config {
+    elastic_load_balancing {
+      enabled = true
+    }
+  }
+
+  storage_config {
+    block_storage {
+      enabled = true
+    }
+  }
+
   vpc_config {
     subnet_ids              = var.subnet_ids
     endpoint_public_access  = var.endpoint_public_access
@@ -184,7 +211,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
   client_id_list  = ["sts.amazonaws.com"]
   thumbprint_list = [data.tls_certificate.eks_oidc.certificates[0].sha1_fingerprint]
   # noinspection HILUnresolvedReference
-  url             = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
+  url = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
 
   tags = merge(var.tags, {
     Name       = "${local.cluster_name}-oidc"
@@ -192,11 +219,68 @@ resource "aws_iam_openid_connect_provider" "eks" {
   })
 }
 
-data "aws_caller_identity" "current" {}
+data "aws_iam_policy_document" "ebs_csi_assume" {
+  count = var.install_aws_ebs_csi_driver ? 1 : 0
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:ebs-csi-controller-sa"]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ebs_csi" {
+  count = var.install_aws_ebs_csi_driver ? 1 : 0
+
+  name               = "${var.name}-eks-aws-ebs-csi"
+  assume_role_policy = data.aws_iam_policy_document.ebs_csi_assume[0].json
+
+  tags = merge(var.tags, {
+    Name       = "${local.cluster_name}-ebs-csi"
+    managed_by = "terraform"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ebs_csi_driver" {
+  count = var.install_aws_ebs_csi_driver ? 1 : 0
+
+  role       = aws_iam_role.ebs_csi[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
+}
+
+resource "aws_eks_addon" "aws_ebs_csi_driver" {
+  count = var.install_aws_ebs_csi_driver ? 1 : 0
+
+  cluster_name                = aws_eks_cluster.kubernetes.name
+  addon_name                  = "aws-ebs-csi-driver"
+  service_account_role_arn    = aws_iam_role.ebs_csi[0].arn
+  resolve_conflicts_on_create = "OVERWRITE"
+  resolve_conflicts_on_update = "OVERWRITE"
+
+  depends_on = [
+    aws_iam_role_policy_attachment.ebs_csi_driver,
+    aws_eks_node_group.worker_nodes,
+  ]
+
+  tags = var.tags
+}
 
 resource "aws_eks_access_entry" "cluster_admin" {
   cluster_name      = aws_eks_cluster.kubernetes.name
-  principal_arn     = data.aws_caller_identity.current.arn
+  principal_arn     = var.cluster_admin_principal_arn
   type              = "STANDARD"
   kubernetes_groups = []
 
@@ -206,7 +290,7 @@ resource "aws_eks_access_entry" "cluster_admin" {
 resource "aws_eks_access_policy_association" "cluster_admin" {
   cluster_name  = aws_eks_cluster.kubernetes.name
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
-  principal_arn = data.aws_caller_identity.current.arn
+  principal_arn = var.cluster_admin_principal_arn
 
   access_scope {
     type = "cluster"

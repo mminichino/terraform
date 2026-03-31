@@ -2,7 +2,7 @@
 
 variable "operator_version" {
   type    = string
-  default = "8.0.10-23"
+  default = "8.0.16-25"
 }
 
 variable "cluster_chart_version" {
