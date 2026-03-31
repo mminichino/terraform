@@ -27,7 +27,7 @@ output "cluster_endpoint" {
 
 output "cluster_endpoint_url" {
   description = "Kubernetes API server URL for provider configuration."
-  value       = "https://${aws_eks_cluster.kubernetes.endpoint}"
+  value       = aws_eks_cluster.kubernetes.endpoint
 }
 
 output "cluster_ca_certificate" {

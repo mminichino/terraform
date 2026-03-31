@@ -220,29 +220,34 @@ data "kubernetes_service_v1" "haproxy_ingress" {
     name      = "haproxy-ingress-kubernetes-ingress"
     namespace = "haproxy-ingress"
   }
-  depends_on = [helm_release.prometheus]
+  depends_on = [helm_release.haproxy_ingress]
 }
 
 # noinspection HILUnresolvedReference
 locals {
-  lb_ingress         = try(data.kubernetes_service_v1.haproxy_ingress.status[0].load_balancer[0].ingress[0], null)
-  ingress_lb_ip      = try(local.lb_ingress.ip, null)
-  ingress_lb_hostname = try(local.lb_ingress.hostname, null)
+  lb_ingress = try(data.kubernetes_service_v1.haproxy_ingress.status.0.load_balancer.0.ingress.0, null)
+  ingress_lb_ip_raw     = local.lb_ingress != null ? local.lb_ingress.ip : null
+  ingress_lb_hostname_raw = local.lb_ingress != null ? local.lb_ingress.hostname : null
+  ingress_lb_ip         = local.ingress_lb_ip_raw != null && trimspace(local.ingress_lb_ip_raw) != "" ? trimspace(local.ingress_lb_ip_raw) : null
+  ingress_lb_hostname   = local.ingress_lb_hostname_raw != null && trimspace(local.ingress_lb_hostname_raw) != "" ? trimspace(local.ingress_lb_hostname_raw) : null
+  ingress_record_type   = local.ingress_lb_ip != null ? "A" : "CNAME"
+  ingress_record_value  = local.ingress_lb_ip != null ? local.ingress_lb_ip : local.ingress_lb_hostname
 }
 
 resource "aws_route53_record" "ingress_hostname" {
   zone_id = aws_route53_zone.ingress.zone_id
   name    = "haproxy"
-  type    = local.ingress_lb_ip != null ? "A" : "CNAME"
+  type    = local.ingress_record_type
   ttl     = 300
-  records = local.ingress_lb_ip != null ? [local.ingress_lb_ip] : [local.ingress_lb_hostname]
+  records = [local.ingress_record_value]
 
   lifecycle {
     precondition {
-      condition     = local.ingress_lb_ip != null || local.ingress_lb_hostname != null
+      condition     = local.ingress_record_value != null
       error_message = "HAProxy LoadBalancer must expose an IP or hostname before creating the DNS record; re-run apply after the Service receives an address."
     }
   }
+  depends_on = [data.kubernetes_service_v1.haproxy_ingress, helm_release.haproxy_ingress]
 }
 
 data "aws_iam_policy_document" "external_secrets_assume" {
@@ -316,30 +321,20 @@ resource "helm_release" "external_secrets" {
   depends_on = [aws_route53_record.ingress_hostname]
 }
 
-resource "kubernetes_manifest" "aws_cluster_secret_store" {
-  manifest = {
-    apiVersion = "external-secrets.io/v1beta1"
-    kind       = "ClusterSecretStore"
-    metadata = {
-      name = "aws-secrets-store"
+resource "helm_release" "aws_secret_store" {
+  name             = "aws-secret-store"
+  namespace        = "external-secrets"
+  repository       = "https://mminichino.github.io/helm-charts"
+  chart            = "aws-secret-store"
+  version          = "0.1.1"
+  cleanup_on_fail  = true
+
+  set = [
+    {
+      name  = "region"
+      value = var.aws_region
     }
-    spec = {
-      provider = {
-        aws = {
-          service = "SecretsManager"
-          region  = var.aws_region
-          auth = {
-            jwt = {
-              serviceAccountRef = {
-                name      = "external-secrets"
-                namespace = "external-secrets"
-              }
-            }
-          }
-        }
-      }
-    }
-  }
+  ]
 
   depends_on = [helm_release.external_secrets]
 }

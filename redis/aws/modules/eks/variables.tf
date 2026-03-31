@@ -24,7 +24,7 @@ variable "subnet_ids" {
 variable "kubernetes_version" {
   description = "Kubernetes version for the cluster and managed node group."
   type        = string
-  default     = "1.31"
+  default     = "1.34"
 }
 
 variable "node_count" {

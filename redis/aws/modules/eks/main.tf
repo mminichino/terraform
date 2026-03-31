@@ -56,6 +56,11 @@ data "aws_iam_policy_document" "eks_cluster_assume" {
 resource "aws_iam_role" "cluster" {
   name               = "${var.name}-eks-cluster"
   assume_role_policy = data.aws_iam_policy_document.eks_cluster_assume.json
+
+  tags = merge(var.tags, {
+    Name       = "${local.cluster_name}-cluster-role"
+    managed_by = "terraform"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSClusterPolicy" {
@@ -82,6 +87,11 @@ data "aws_iam_policy_document" "eks_node_assume" {
 resource "aws_iam_role" "node" {
   name               = "${var.name}-eks-node"
   assume_role_policy = data.aws_iam_policy_document.eks_node_assume.json
+
+  tags = merge(var.tags, {
+    Name       = "${local.cluster_name}-node-role"
+    managed_by = "terraform"
+  })
 }
 
 resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodePolicy" {
@@ -103,6 +113,10 @@ resource "aws_eks_cluster" "kubernetes" {
   name     = local.cluster_name
   role_arn = aws_iam_role.cluster.arn
   version  = var.kubernetes_version
+
+  access_config {
+    authentication_mode = "API"
+  }
 
   vpc_config {
     subnet_ids              = var.subnet_ids

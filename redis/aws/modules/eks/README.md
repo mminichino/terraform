@@ -1,5 +1,7 @@
-#
+# Terraform EKS Module
 
+Sample terraform configuration for EKS with Redis.
+```hcl
 terraform {
   required_providers {
     aws = {
@@ -93,3 +95,4 @@ module "redis_env" {
   storage_class               = module.eks_env.eks_storage_class
   depends_on                  = [module.eks_env]
 }
+```
