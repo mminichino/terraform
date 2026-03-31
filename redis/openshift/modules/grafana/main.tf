@@ -148,3 +148,18 @@ resource "kubernetes_manifest" "grafana_route" {
   }
   depends_on = [kubernetes_namespace_v1.grafana]
 }
+
+data "kubernetes_resource" "grafana_route" {
+  api_version = "route.openshift.io/v1"
+  kind        = "Route"
+
+  metadata {
+    name      = "grafana"
+    namespace = var.namespace
+  }
+  depends_on = [kubernetes_manifest.grafana_route]
+}
+
+locals {
+  grafana_route_host = try(data.kubernetes_resource.grafana_route.object.status.ingress.0.host, null)
+}

@@ -3,10 +3,6 @@
 locals {
   ingress_enabled = contains(["nginx", "haproxy"], var.service_type)
   cluster_name    = "${var.namespace}-cluster"
-  redis_ui_port = local.ingress_enabled ? 443 : 8443
-  redis_ui_name = "ui-${local.cluster_name}"
-  redis_ui_host = "${local.redis_ui_name}.${var.domain_name}"
-  redis_ui_url = "https://${local.redis_ui_host}:${local.redis_ui_port}"
 }
 
 resource "helm_release" "redis_operator" {
@@ -312,4 +308,37 @@ data "kubernetes_secret_v1" "redis_cluster_secret" {
     namespace = var.namespace
   }
   depends_on = [helm_release.rdidb_database]
+}
+
+data "kubernetes_service_v1" "cluster_service" {
+  metadata {
+    name      = "${local.cluster_name}-ui"
+    namespace = var.namespace
+  }
+  depends_on = [helm_release.redis_cluster]
+}
+
+data "kubernetes_service_v1" "redb_lb_service" {
+  metadata {
+    name      = "redb-load-balancer"
+    namespace = var.namespace
+  }
+  depends_on = [helm_release.redb_database]
+}
+
+data "kubernetes_service_v1" "rdidb_lb_service" {
+  metadata {
+    name      = "rdidb-load-balancer"
+    namespace = var.namespace
+  }
+  depends_on = [helm_release.rdidb_database]
+}
+
+locals {
+  # noinspection HILUnresolvedReference
+  cluster_ip = try(data.kubernetes_service_v1.cluster_service.status.0.load_balancer.0.ingress.0.ip, null)
+  # noinspection HILUnresolvedReference
+  redb_lb_ip = try(data.kubernetes_service_v1.redb_lb_service.status.0.load_balancer.0.ingress.0.ip, null)
+  # noinspection HILUnresolvedReference
+  rdidb_lb_ip = try(data.kubernetes_service_v1.rdidb_lb_service.status.0.load_balancer.0.ingress.0.ip, null)
 }
