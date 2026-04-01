@@ -19,3 +19,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "eks_cluster_name" {
+  description = "Override EKS cluster name for subnet discovery tags (kubernetes.io/cluster/<name>=shared and kubernetes.io/role/elb=1). When null (default), uses the module name input plus the suffix \"-eks\"."
+  type        = string
+  default     = null
+}

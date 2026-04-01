@@ -5,7 +5,7 @@ data "aws_route53_zone" "parent" {
 }
 
 locals {
-  cluster_name = "${var.name}-eks"
+  cluster_name = coalesce(var.eks_cluster_name, "${var.name}-eks")
   parent_domain_fqdn = coalesce(
     var.parent_domain_fqdn,
     trimsuffix(data.aws_route53_zone.parent.name, "."),
@@ -36,20 +36,6 @@ resource "aws_route53_record" "cluster_ns_delegation" {
   type    = "NS"
   ttl     = 300
   records = aws_route53_zone.cluster.name_servers
-}
-
-resource "aws_ec2_tag" "cluster_subnet_shared" {
-  count       = length(var.subnet_ids)
-  resource_id = var.subnet_ids[count.index]
-  key         = "kubernetes.io/cluster/${local.cluster_name}"
-  value       = "shared"
-}
-
-resource "aws_ec2_tag" "subnet_elb_role" {
-  count       = length(var.subnet_ids)
-  resource_id = var.subnet_ids[count.index]
-  key         = "kubernetes.io/role/elb"
-  value       = "1"
 }
 
 data "aws_iam_policy_document" "eks_cluster_assume" {

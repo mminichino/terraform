@@ -6,6 +6,12 @@ variable "name" {
   default     = "eks-cluster"
 }
 
+variable "eks_cluster_name" {
+  description = "Kubernetes cluster name (aws_eks_cluster.name). When null (default), uses the module name input plus the suffix \"-eks\". Override when the cluster name must differ; pass the same value to redis/aws/modules/vpc eks_cluster_name so subnet tags stay aligned."
+  type        = string
+  default     = null
+}
+
 variable "aws_region" {
   description = "AWS region for the EKS cluster."
   type        = string
@@ -28,7 +34,7 @@ variable "parent_domain_fqdn" {
 }
 
 variable "subnet_ids" {
-  description = "Subnet IDs for the EKS control plane and worker nodes (typically public subnets from the VPC module)."
+  description = "Subnet IDs for the EKS control plane and worker nodes. With redis/aws/modules/vpc and the same module name, subnet tags default to the same cluster name as this module (coalesce(eks_cluster_name, \"<name>-eks\"))."
   type        = list(string)
 }
 

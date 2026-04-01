@@ -1,5 +1,9 @@
 # Deploy VPC
 
+locals {
+  eks_cluster_name = coalesce(var.eks_cluster_name, "${var.name}-eks")
+}
+
 data "aws_availability_zones" "zones" {
   state = "available"
 }
@@ -43,10 +47,17 @@ resource "aws_subnet" "subnets" {
   map_public_ip_on_launch = true
   depends_on              = [aws_vpc.vpc]
 
-  tags = merge(var.tags, {
-    Name = "${var.name}-subnet-${count.index + 1}"
-    Type = "public"
-  })
+  tags = merge(
+    var.tags,
+    {
+      Name = "${var.name}-subnet-${count.index + 1}"
+      Type = "public"
+    },
+    {
+      "kubernetes.io/cluster/${local.eks_cluster_name}" = "shared"
+      "kubernetes.io/role/elb"                          = "1"
+    },
+  )
 }
 
 resource "aws_route_table_association" "public" {
