@@ -11,6 +11,8 @@ locals {
     trimsuffix(data.aws_route53_zone.parent.name, "."),
   )
   cluster_domain = "${var.name}.${local.parent_domain_fqdn}"
+  max_node_count = coalesce(var.max_node_count, var.node_count * 2)
+  min_node_count = coalesce(var.min_node_count, var.node_count - 1)
 }
 
 resource "aws_route53_zone" "cluster" {
@@ -139,11 +141,12 @@ resource "aws_eks_node_group" "worker_nodes" {
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = var.subnet_ids
   version         = var.kubernetes_version
+  release_version = var.node_release_version
 
   scaling_config {
     desired_size = var.node_count
-    max_size     = var.max_node_count
-    min_size     = var.min_node_count
+    max_size     = local.max_node_count
+    min_size     = local.min_node_count
   }
 
   instance_types = var.instance_types

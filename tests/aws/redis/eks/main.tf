@@ -40,9 +40,8 @@ module "eks" {
   parent_domain_fqdn          = var.parent_domain_fqdn
   subnet_ids                  = module.vpc.subnet_id_list
   kubernetes_version          = var.kubernetes_version
+  node_release_version        = var.node_release_version
   node_count                  = var.node_count
-  max_node_count              = var.max_node_count
-  min_node_count              = var.min_node_count
   instance_types              = var.eks_instance_types
   storage_class_name          = var.eks_storage_class_name
   endpoint_public_access      = var.eks_endpoint_public_access

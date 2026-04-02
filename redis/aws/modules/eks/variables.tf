@@ -44,22 +44,28 @@ variable "kubernetes_version" {
   default     = "1.34"
 }
 
+variable "node_release_version" {
+  description = "Kubernetes version for the cluster and managed node group."
+  type        = string
+  default     = "1.34.4-20260318"
+}
+
 variable "node_count" {
   description = "Desired capacity for the managed node group."
   type        = number
-  default     = 1
+  default     = 3
 }
 
 variable "max_node_count" {
   description = "Maximum size for the managed node group."
   type        = number
-  default     = 3
+  default     = null
 }
 
 variable "min_node_count" {
   description = "Minimum size for the managed node group."
   type        = number
-  default     = 1
+  default     = null
 }
 
 variable "instance_types" {

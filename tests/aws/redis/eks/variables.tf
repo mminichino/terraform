@@ -39,19 +39,15 @@ variable "kubernetes_version" {
   default = "1.34"
 }
 
+variable "node_release_version" {
+  description = "Kubernetes version for the cluster and managed node group."
+  type        = string
+  default     = "1.34.4-20260318"
+}
+
 variable "node_count" {
   type    = number
   default = 3
-}
-
-variable "max_node_count" {
-  type    = number
-  default = 6
-}
-
-variable "min_node_count" {
-  type    = number
-  default = 1
 }
 
 variable "eks_instance_types" {
