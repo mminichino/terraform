@@ -90,6 +90,10 @@ resource "helm_release" "redis_cluster" {
     {
       name  = "externalSecret.key"
       value = var.external_secret_cluster_key
+    },
+    {
+      name  = "externalSecret.property"
+      value = var.external_secret_cluster_property
     }
   ]
   depends_on = [helm_release.redis_operator]
@@ -211,6 +215,10 @@ resource "helm_release" "redb_database" {
     {
       name  = "externalSecret.key"
       value = var.external_secret_redb_key
+    },
+    {
+      name  = "externalSecret.property"
+      value = var.external_secret_redb_property
     }
   ]
   depends_on = [kubernetes_manifest.monitoring]
@@ -287,6 +295,10 @@ resource "helm_release" "rdidb_database" {
     {
       name  = "externalSecret.key"
       value = var.external_secret_rdidb_key
+    },
+    {
+      name  = "externalSecret.property"
+      value = var.external_secret_rdidb_property
     }
   ]
   depends_on = [helm_release.redb_database]

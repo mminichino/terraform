@@ -7,12 +7,12 @@ variable "operator_version" {
 
 variable "cluster_chart_version" {
   type    = string
-  default = "0.4.2"
+  default = "0.4.3"
 }
 
 variable "database_chart_version" {
   type    = string
-  default = "0.2.5"
+  default = "0.2.6"
 }
 
 variable "domain_name" {
@@ -75,14 +75,29 @@ variable "external_secret_cluster_key" {
   default = ""
 }
 
+variable "external_secret_cluster_property" {
+  type    = string
+  default = "password"
+}
+
 variable "external_secret_redb_key" {
   type    = string
   default = ""
 }
 
+variable "external_secret_redb_property" {
+  type    = string
+  default = "password"
+}
+
 variable "external_secret_rdidb_key" {
   type    = string
   default = ""
+}
+
+variable "external_secret_rdidb_property" {
+  type    = string
+  default = "password"
 }
 
 variable "service_type" {
