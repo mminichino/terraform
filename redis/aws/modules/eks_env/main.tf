@@ -106,6 +106,7 @@ resource "helm_release" "external_dns" {
       policy        = "sync"
     })
   ]
+  depends_on = [aws_iam_role.external_dns]
 }
 
 resource "kubernetes_storage_class_v1" "gp3" {
@@ -124,6 +125,7 @@ resource "kubernetes_storage_class_v1" "gp3" {
   parameters = {
     type                       = "gp3"
     iopsPerGB                  = 100
+    throughput                 = 512
     allowAutoIOPSPerGBIncrease = true
   }
 }
@@ -338,7 +340,10 @@ resource "helm_release" "external_secrets" {
     }
   ]
 
-  depends_on = [aws_route53_record.ingress_hostname]
+  depends_on = [
+    aws_route53_record.ingress_hostname,
+    aws_iam_role.external_secrets
+  ]
 }
 
 resource "helm_release" "aws_secret_store" {

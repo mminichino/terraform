@@ -26,7 +26,6 @@ resource "helm_release" "redis_cluster" {
   repository        = "https://mminichino.github.io/helm-charts"
   chart             = "redis-cluster"
   version           = var.cluster_chart_version
-  dependency_update = true
   cleanup_on_fail   = true
   atomic            = true
 
@@ -336,7 +335,7 @@ resource "helm_release" "redis_insight" {
     },
     {
       name  = "storageClass"
-      value = "gp2"
+      value = var.storage_class
     }
   ]
   depends_on = [helm_release.redis_cluster]
