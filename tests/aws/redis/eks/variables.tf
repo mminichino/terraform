@@ -55,19 +55,9 @@ variable "eks_instance_types" {
   default = ["m5.2xlarge"]
 }
 
-variable "eks_storage_class_name" {
-  type    = string
-  default = "gp2"
-}
-
 variable "eks_endpoint_public_access" {
   type    = bool
   default = true
-}
-
-variable "external_dns_chart_version" {
-  type    = string
-  default = "1.15.0"
 }
 
 variable "cluster_key" {

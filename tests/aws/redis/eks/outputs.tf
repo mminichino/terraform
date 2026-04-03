@@ -23,15 +23,15 @@ output "cluster_ui" {
 
 output "grafana_admin_password" {
   description = "Grafana admin password"
-  value       = module.eks_env.grafana_admin_password
+  value       = module.eks.grafana_admin_password
   sensitive   = true
 }
 
 output "grafana_ui" {
   description = "Grafana UI URL"
-  value       = module.eks_env.grafana_ui
+  value       = module.eks.grafana_ui
 }
 
 output "ingress_domain_name" {
-  value = module.eks_env.ingress_domain_name
+  value = module.eks.ingress_domain_name
 }

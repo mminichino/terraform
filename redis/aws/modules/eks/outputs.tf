@@ -2,88 +2,118 @@
 
 output "cluster_name" {
   description = "EKS cluster name."
-  value       = aws_eks_cluster.kubernetes.name
+  value       = module.cluster.cluster_name
 }
 
 output "cluster_arn" {
   description = "EKS cluster ARN."
-  value       = aws_eks_cluster.kubernetes.arn
+  value       = module.cluster.cluster_arn
 }
 
 output "cluster_domain" {
   description = "Cluster DNS subdomain delegated under the parent hosted zone (same role as GKE cluster_domain)."
-  value       = local.cluster_domain
+  value       = module.cluster.cluster_domain
 }
 
 output "cluster_hosted_zone_id" {
   description = "Route53 zone ID for cluster_domain (used to delegate ingress.* from eks_env)."
-  value       = aws_route53_zone.cluster.zone_id
+  value       = module.cluster.cluster_hosted_zone_id
 }
 
 output "cluster_endpoint" {
   description = "Kubernetes API server endpoint (hostname)."
-  value       = aws_eks_cluster.kubernetes.endpoint
+  value       = module.cluster.cluster_endpoint
 }
 
 output "cluster_endpoint_url" {
   description = "Kubernetes API server URL for provider configuration."
-  value       = aws_eks_cluster.kubernetes.endpoint
+  value       = module.cluster.cluster_endpoint_url
 }
 
 output "cluster_ca_certificate" {
   description = "Base64-decoded cluster CA certificate for the Kubernetes provider."
-  value       = base64decode(aws_eks_cluster.kubernetes.certificate_authority[0].data)
+  value       = module.cluster.cluster_ca_certificate
   sensitive   = true
 }
 
 output "cluster_ca_certificate_b64" {
   description = "PEM cluster CA certificate (base64) as returned by the EKS API."
-  value       = aws_eks_cluster.kubernetes.certificate_authority[0].data
+  value       = module.cluster.cluster_ca_certificate_b64
   sensitive   = true
 }
 
 output "storage_class" {
-  description = "Storage class name to pass to redis_env / eks_env."
+  description = "Storage class name (declared on cluster); workloads use eks_env.eks_storage_class for the provisioned default."
   value       = var.storage_class_name
 }
 
 output "oidc_issuer_url" {
   description = "OIDC issuer URL for IRSA trust policies."
-  # noinspection HILUnresolvedReference
-  value = aws_eks_cluster.kubernetes.identity[0].oidc[0].issuer
+  value       = module.cluster.oidc_issuer_url
 }
 
 output "oidc_provider_arn" {
   description = "IAM OIDC provider ARN for the cluster."
-  value       = aws_iam_openid_connect_provider.eks.arn
+  value       = module.cluster.oidc_provider_arn
 }
 
 output "oidc_issuer_hostpath" {
   description = "OIDC issuer host/path without https:// for IAM condition keys."
-  value       = local.oidc_issuer_hostpath
+  value       = module.cluster.oidc_issuer_hostpath
 }
 
 output "kubernetes_cluster_host" {
   description = "Kubernetes API host (alias of cluster_endpoint)."
-  value       = aws_eks_cluster.kubernetes.endpoint
+  value       = module.cluster.kubernetes_cluster_host
 }
 
 output "exec_api_version" {
-  value = "client.authentication.k8s.io/v1beta1"
+  value = module.cluster.exec_api_version
 }
 
 output "exec_command" {
-  value = "aws"
+  value = module.cluster.exec_command
 }
 
 output "exec_args" {
-  value = ["eks", "get-token", "--cluster-name", aws_eks_cluster.kubernetes.name, "--region", var.aws_region]
+  value = module.cluster.exec_args
 }
 
 output "cluster" {
   description = "Cluster summary (aligned with OKE cluster output shape where useful)."
-  value = {
-    name = aws_eks_cluster.kubernetes.name
-    arn  = aws_eks_cluster.kubernetes.arn
-  }
+  value       = module.cluster.cluster
+}
+
+output "grafana_admin_password" {
+  value     = module.eks_env.grafana_admin_password
+  sensitive = true
+}
+
+output "grafana_hostname" {
+  value = module.eks_env.grafana_hostname
+}
+
+output "grafana_ui" {
+  value = module.eks_env.grafana_ui
+}
+
+output "ingress_ip" {
+  value = module.eks_env.ingress_ip
+}
+
+output "nginx_ingress_ip" {
+  description = "Alias for ingress_ip (matches gke_env output name)."
+  value       = module.eks_env.nginx_ingress_ip
+}
+
+output "eks_domain_name" {
+  value = module.eks_env.eks_domain_name
+}
+
+output "ingress_domain_name" {
+  value = module.eks_env.ingress_domain_name
+}
+
+output "eks_storage_class" {
+  value = module.eks_env.eks_storage_class
 }

@@ -31,5 +31,6 @@ output "ingress_domain_name" {
 }
 
 output "eks_storage_class" {
-  value = var.eks_storage_class
+  description = "Default gp3 StorageClass created by this module (EBS CSI)."
+  value       = kubernetes_storage_class_v1.gp3.metadata[0].name
 }

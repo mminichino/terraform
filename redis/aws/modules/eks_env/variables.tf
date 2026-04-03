@@ -5,11 +5,6 @@ variable "eks_domain_name" {
   type        = string
 }
 
-variable "eks_storage_class" {
-  description = "Storage class name to pass to redis_env (same as module.eks.storage_class)."
-  type        = string
-}
-
 variable "cluster_hosted_zone_id" {
   description = "Route53 hosted zone ID for eks_domain_name (delegates ingress.*)."
   type        = string

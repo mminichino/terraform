@@ -17,25 +17,8 @@ variable "aws_region" {
   type        = string
 }
 
-variable "subnet_ids" {
-  description = "Subnet IDs for the EKS control plane and worker nodes. With redis/aws/modules/vpc and the same module name, subnet tags default to the same cluster name as this module (coalesce(eks_cluster_name, \"<name>-eks\"))."
-  type        = list(string)
-}
-
-variable "instance_types" {
-  description = "EC2 instance types for the managed node group."
-  type        = list(string)
-  default     = ["m5.xlarge"]
-}
-
-variable "endpoint_public_access" {
-  description = "Whether the Kubernetes API server endpoint is publicly reachable."
-  type        = bool
-  default     = true
-}
-
 variable "cluster_admin_principal_arn" {
-  description = "IAM principal ARN for EKS API access (AmazonEKSClusterAdminPolicy). Resolve in the root module (e.g. data.aws_caller_identity.current.arn) and pass through; do not read caller identity only inside the eks_cluster submodule when VPC subnets are passed from another module, or Terraform may defer the read until apply and replace aws_eks_access_entry every run (ForceNew on principal_arn)."
+  description = "IAM principal ARN for EKS API access (AmazonEKSClusterAdminPolicy). Must be resolved in the root module (e.g. data.aws_caller_identity.current.arn), not via a data source inside this module, when module.eks uses depends_on = [module.vpc]; otherwise Terraform can defer the read until apply and replace aws_eks_access_entry every run (provider ForceNew on principal_arn)."
   type        = string
 }
 
@@ -50,6 +33,11 @@ variable "parent_domain_fqdn" {
   default     = null
 }
 
+variable "subnet_ids" {
+  description = "Subnet IDs for the EKS control plane and worker nodes. With redis/aws/modules/vpc and the same module name, subnet tags default to the same cluster name as this module (coalesce(eks_cluster_name, \"<name>-eks\"))."
+  type        = list(string)
+}
+
 variable "kubernetes_version" {
   description = "Kubernetes version for the cluster and managed node group."
   type        = string
@@ -57,7 +45,7 @@ variable "kubernetes_version" {
 }
 
 variable "node_release_version" {
-  description = "AMI release version for the managed node group."
+  description = "Kubernetes version for the cluster and managed node group."
   type        = string
   default     = "1.34.4-20260318"
 }
@@ -80,10 +68,10 @@ variable "min_node_count" {
   default     = null
 }
 
-variable "storage_class_name" {
-  description = "Logical storage class label (e.g. gp2); the default volume StorageClass is created in eks_env (see output eks_storage_class)."
-  type        = string
-  default     = "gp2"
+variable "instance_types" {
+  description = "EC2 instance types for the managed node group."
+  type        = list(string)
+  default     = ["m5.xlarge"]
 }
 
 variable "install_aws_ebs_csi_driver" {
@@ -92,13 +80,14 @@ variable "install_aws_ebs_csi_driver" {
   default     = true
 }
 
+variable "endpoint_public_access" {
+  description = "Whether the Kubernetes API server endpoint is publicly reachable."
+  type        = bool
+  default     = true
+}
+
 variable "tags" {
   description = "Tags to apply to taggable resources."
   type        = map(string)
   default     = {}
-}
-
-variable "external_dns_chart_version" {
-  type    = string
-  default = "1.15.0"
 }

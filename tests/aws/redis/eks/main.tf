@@ -43,10 +43,8 @@ module "eks" {
   node_release_version        = var.node_release_version
   node_count                  = var.node_count
   instance_types              = var.eks_instance_types
-  storage_class_name          = var.eks_storage_class_name
   endpoint_public_access      = var.eks_endpoint_public_access
   tags                        = var.tags
-  depends_on                  = [module.vpc]
 }
 
 provider "kubernetes" {
@@ -73,26 +71,14 @@ provider "helm" {
   }
 }
 
-module "eks_env" {
-  source                     = "../../../../redis/aws/modules/eks_env"
-  eks_domain_name            = module.eks.cluster_domain
-  eks_storage_class          = module.eks.storage_class
-  cluster_hosted_zone_id     = module.eks.cluster_hosted_zone_id
-  aws_region                 = var.aws_region
-  oidc_provider_arn          = module.eks.oidc_provider_arn
-  oidc_issuer_hostpath       = module.eks.oidc_issuer_hostpath
-  external_dns_chart_version = var.external_dns_chart_version
-  depends_on                 = [module.eks]
-}
-
 module "redis_env" {
   source                      = "../../../../redis/aws/modules/redis_env"
-  domain_name                 = module.eks_env.eks_domain_name
+  domain_name                 = module.eks.eks_domain_name
   namespace                   = var.name
   external_secret_cluster_key = var.cluster_key
   external_secret_redb_key    = var.redb_key
   external_secret_rdidb_key   = var.rdidb_key
   license                     = var.license
-  storage_class               = module.eks_env.eks_storage_class
-  depends_on                  = [module.eks_env]
+  storage_class               = module.eks.eks_storage_class
+  depends_on                  = [module.eks]
 }
