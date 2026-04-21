@@ -7,7 +7,7 @@ variable "server_chart_version" {
 
 variable "demo_chart_version" {
   type    = string
-  default = "0.3.1"
+  default = "0.3.2"
 }
 
 variable "namespace" {
