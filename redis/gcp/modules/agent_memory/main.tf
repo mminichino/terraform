@@ -64,10 +64,6 @@ resource "helm_release" "agent_memory_demo" {
     {
       name = "externalSecret.keys.password"
       value = var.password_secret_key
-    },
-    {
-      name = "storageClass"
-      value = var.storage_class
     }
   ]
   depends_on = [helm_release.agent_memory_server]
