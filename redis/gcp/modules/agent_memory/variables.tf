@@ -2,12 +2,12 @@
 
 variable "server_chart_version" {
   type    = string
-  default = "0.2.1"
+  default = "0.15.2"
 }
 
 variable "demo_chart_version" {
   type    = string
-  default = "0.3.0"
+  default = "0.3.1"
 }
 
 variable "namespace" {
