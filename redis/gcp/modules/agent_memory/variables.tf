@@ -7,7 +7,7 @@ variable "server_chart_version" {
 
 variable "demo_chart_version" {
   type    = string
-  default = "0.2.5"
+  default = "0.3.0"
 }
 
 variable "namespace" {
@@ -44,4 +44,9 @@ variable "openai_secret_key" {
 
 variable "tavily_secret_key" {
   type    = string
+}
+
+variable "storage_class" {
+  type    = string
+  default = "premium-rwo"
 }
