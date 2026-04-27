@@ -44,7 +44,7 @@ resource "helm_release" "agent_memory_demo" {
   wait_for_jobs    = true
   atomic           = true
 
-  set = [
+  set = flatten([
     {
       name = "dns.domain"
       value = var.domain_name
@@ -64,7 +64,21 @@ resource "helm_release" "agent_memory_demo" {
     {
       name = "externalSecret.keys.password"
       value = var.password_secret_key
-    }
-  ]
+    },
+    var.active_active ? [
+      {
+        name = "multiActive.enabled"
+        value = var.active_active
+      },
+      {
+        name = "multiActive.localCluster"
+        value = var.local_cluster
+      },
+      {
+        name = "multiActive.remoteCluster"
+        value = var.remote_cluster
+      },
+    ] : []
+  ])
   depends_on = [helm_release.agent_memory_server]
 }

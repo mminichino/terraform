@@ -46,6 +46,19 @@ variable "tavily_secret_key" {
   type    = string
 }
 
+variable "active_active" {
+  type    = bool
+  default = false
+}
+
+variable "local_cluster" {
+  type    = string
+}
+
+variable "remote_cluster" {
+  type    = string
+}
+
 variable "storage_class" {
   type    = string
   default = "premium-rwo"
