@@ -7,7 +7,7 @@ variable "operator_version" {
 
 variable "cluster_chart_version" {
   type    = string
-  default = "0.4.5"
+  default = "0.4.6"
 }
 
 variable "database_chart_version" {
