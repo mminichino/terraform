@@ -65,6 +65,10 @@ resource "helm_release" "agent_memory_demo" {
       name = "externalSecret.keys.password"
       value = var.password_secret_key
     },
+    {
+      name = "createDb"
+      value = var.create_database
+    },
     var.active_active ? [
       {
         name = "multiActive.enabled"
@@ -77,6 +81,10 @@ resource "helm_release" "agent_memory_demo" {
       {
         name = "multiActive.remoteCluster"
         value = var.remote_cluster
+      },
+      {
+        name = "externalSecret.keys.database"
+        value = var.database_key
       },
     ] : []
   ])
