@@ -58,14 +58,17 @@ variable "active_active" {
 
 variable "local_cluster" {
   type    = string
+  default = ""
 }
 
 variable "remote_cluster" {
   type    = string
+  default = ""
 }
 
 variable "database_key" {
   type    = string
+  default = ""
 }
 
 variable "storage_class" {
