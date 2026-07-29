@@ -126,7 +126,7 @@ data "cloudinit_config" "node_init" {
   part {
     content_type = "text/cloud-config"
     content = templatefile("${path.module}/files/cloud-init.yaml.tftpl", {
-      install_file_b64 = base64encode(file(var.install_file_path))
+      install_file_b64 = filebase64(var.install_file_path)
     })
   }
 
