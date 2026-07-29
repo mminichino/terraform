@@ -119,23 +119,6 @@ resource "aws_security_group" "redis_sg" {
   })
 }
 
-data "cloudinit_config" "node_init" {
-  gzip          = false
-  base64_encode = true
-
-  part {
-    content_type = "text/cloud-config"
-    content = templatefile("${path.module}/files/cloud-init.yaml.tftpl", {
-      install_file_b64 = filebase64(var.install_file_path)
-    })
-  }
-
-  part {
-    content_type = "text/x-shellscript"
-    content      = file("${path.module}/scripts/redis.sh")
-  }
-}
-
 locals {
   cluster_name   = "${var.name}-redis"
   cluster_domain = "${local.cluster_name}.${data.aws_route53_zone.public_zone.name}"
@@ -165,8 +148,6 @@ resource "aws_instance" "redis_nodes" {
     throughput  = var.data_volume_throughput
   }
 
-  user_data_base64 = data.cloudinit_config.node_init.rendered
-
   connection {
     type        = "ssh"
     user        = "ec2-user"
@@ -174,9 +155,20 @@ resource "aws_instance" "redis_nodes" {
     host        = self.public_ip
   }
 
+  provisioner "file" {
+    source      = var.install_file_path
+    destination = "/tmp/redis/redis-enterprise.tar"
+  }
+
+  provisioner "file" {
+    source      = "${path.module}/scripts/redis.sh"
+    destination = "/tmp/redis.sh"
+  }
+
   provisioner "remote-exec" {
     inline = [
-      "sudo cloud-init status --wait > /dev/null 2>&1",
+      "chmod +x /tmp/redis.sh",
+      "sudo /tmp/redis.sh > /tmp/redis_install.log 2>&1",
     ]
   }
 

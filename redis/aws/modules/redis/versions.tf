@@ -6,9 +6,6 @@ terraform {
     random = {
       source = "hashicorp/random"
     }
-    cloudinit = {
-      source  = "hashicorp/cloudinit"
-    }
   }
 
   required_version = ">= 0.14.0"
