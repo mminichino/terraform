@@ -2,12 +2,32 @@
 
 exec > /tmp/create_cluster.log 2>&1
 
-private_ip=$(curl -s http://169.254.169.254/latest/meta-data/local-ipv4)
-public_ip=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-availability_zone=$(curl -s http://169.254.169.254/latest/meta-data/placement/availability-zone)
+TOKEN=$(curl -sf -X PUT "http://169.254.169.254/latest/api/token" \
+  -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+if [ -z "$TOKEN" ]; then
+  echo "Failed to retrieve IMDSv2 token"
+  exit 1
+fi
+
+private_ip=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/local-ipv4)
+public_ip=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/public-ipv4 || true)
+availability_zone=$(curl -sf -H "X-aws-ec2-metadata-token: $TOKEN" \
+  http://169.254.169.254/latest/meta-data/placement/availability-zone)
+
+if [ -z "$public_ip" ]; then
+  public_ip="$private_ip"
+fi
+
 echo "Current node IP: $private_ip"
 echo "Current node public IP: $public_ip"
 echo "Current node availability zone: $availability_zone"
+
+if [ -z "$private_ip" ] || [ -z "$availability_zone" ]; then
+  echo "Failed to retrieve required instance metadata"
+  exit 1
+fi
 
 echo "Waiting for Redis Enterprise API..."
 timeout=300
