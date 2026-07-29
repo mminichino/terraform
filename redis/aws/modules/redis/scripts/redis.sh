@@ -1,9 +1,7 @@
 #!/bin/bash
 
-yum update -y
-yum upgrade -y
-
-yum install -y wget curl gnupg2 jq unzip zip
+dnf update -y
+dnf install -y wget curl gnupg2 jq unzip zip
 
 DEVICE=""
 
