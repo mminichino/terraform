@@ -155,9 +155,16 @@ resource "aws_instance" "redis_nodes" {
     host        = self.public_ip
   }
 
+  provisioner "remote-exec" {
+    inline = [
+      "sudo mkdir -p /tmp/redis"
+    ]
+  }
+
   provisioner "file" {
     source      = var.install_file_path
     destination = "/tmp/redis/redis-enterprise.tar"
+
   }
 
   provisioner "file" {
