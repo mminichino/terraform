@@ -42,13 +42,9 @@ UUID=$(blkid -s UUID -o value "$PARTITION")
 echo "UUID=$UUID /data xfs defaults,nofail 0 2" >> /etc/fstab
 echo "Added entry to /etc/fstab"
 
-mkdir /tmp/redis
 cd /tmp/redis || exit
 
 echo "Installing Redis Enterprise"
-
-echo "Copying installation tar file"
-aws s3 cp "s3://${bucket}/redislabs-${software_version}-amzn2-x86_64.tar" ./redis-enterprise.tar
 
 tar -xf redis-enterprise.tar
 

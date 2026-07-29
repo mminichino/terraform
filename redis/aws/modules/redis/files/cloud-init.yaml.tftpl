@@ -1,0 +1,7 @@
+#cloud-config
+write_files:
+  - path: /tmp/redis/redis-enterprise.tar
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${install_file_b64}

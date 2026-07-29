@@ -91,14 +91,8 @@ variable "ec2_instance_role" {
   type        = string
 }
 
-variable "bucket" {
+variable "install_file_path" {
   type    = string
-  default = "redis-enterprise-software"
-}
-
-variable "software_version" {
-  description = "Redis Enterprise Software version"
-  type        = string
 }
 
 variable "license" {

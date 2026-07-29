@@ -123,6 +123,23 @@ data "aws_iam_instance_profile" "ec2_s3_profile" {
   name = var.ec2_instance_role
 }
 
+data "cloudinit_config" "node_init" {
+  gzip          = false
+  base64_encode = true
+
+  part {
+    content_type = "text/cloud-config"
+    content = templatefile("${path.module}/files/cloud-init.yaml.tftpl", {
+      install_file_b64 = base64encode(file(var.install_file_path))
+    })
+  }
+
+  part {
+    content_type = "text/x-shellscript"
+    content      = file("${path.module}/scripts/redis.sh")
+  }
+}
+
 locals {
   cluster_name   = "${var.name}-redis"
   cluster_domain = "${local.cluster_name}.${data.aws_route53_zone.public_zone.name}"
@@ -153,10 +170,7 @@ resource "aws_instance" "redis_nodes" {
     throughput  = var.data_volume_throughput
   }
 
-  user_data_base64 = base64encode(templatefile("${path.module}/scripts/redis.sh", {
-    software_version = var.software_version
-    bucket           = var.bucket
-  }))
+  user_data_base64 = data.cloudinit_config.node_init.rendered
 
   connection {
     type        = "ssh"
