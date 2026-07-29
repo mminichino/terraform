@@ -119,10 +119,6 @@ resource "aws_security_group" "redis_sg" {
   })
 }
 
-data "aws_iam_instance_profile" "ec2_s3_profile" {
-  name = var.ec2_instance_role
-}
-
 data "cloudinit_config" "node_init" {
   gzip          = false
   base64_encode = true
@@ -154,7 +150,6 @@ resource "aws_instance" "redis_nodes" {
   vpc_security_group_ids      = [aws_security_group.redis_sg.id]
   subnet_id                   = var.aws_subnet_id_list[count.index % length(var.aws_subnet_id_list)]
   associate_public_ip_address = true
-  iam_instance_profile        = data.aws_iam_instance_profile.ec2_s3_profile.name
 
   root_block_device {
     volume_size = var.root_volume_size

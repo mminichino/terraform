@@ -86,11 +86,6 @@ variable "admin_user" {
   default     = "admin@redis.com"
 }
 
-variable "ec2_instance_role" {
-  description = "AWS role with EC2 instance profile for S3 access"
-  type        = string
-}
-
 variable "install_file_path" {
   type    = string
 }
