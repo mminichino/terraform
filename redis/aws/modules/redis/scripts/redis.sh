@@ -25,9 +25,9 @@ echo "Creating partition on $DEVICE"
 parted -s "$DEVICE" mklabel gpt
 parted -s "$DEVICE" mkpart primary xfs 0% 100%
 
-PARTITION="$${DEVICE}1"
+PARTITION="${DEVICE}1"
 if [[ $DEVICE == *"nvme"* ]]; then
-    PARTITION="$${DEVICE}p1"
+    PARTITION="${DEVICE}p1"
 fi
 
 mkfs.xfs "$PARTITION"
