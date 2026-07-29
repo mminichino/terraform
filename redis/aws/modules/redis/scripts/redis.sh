@@ -67,4 +67,6 @@ EOF
 mkdir -p /data/persistent
 mkdir -p /data/temp
 mkdir -p /data/flash
-sudo chown -R redislabs:redislabs /data
+chown -R redislabs:redislabs /data
+
+systemctl disable --now firewalld || true
