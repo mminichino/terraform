@@ -3,7 +3,14 @@
 apt update -y
 apt upgrade -y
 
-apt install -y wget curl gnupg2 software-properties-common awscli jq unzip zip openjdk-17-jre-headless python3-pip python3-dev cmake
+apt install -y wget curl gnupg2 software-properties-common jq unzip zip net-tools openjdk-17-jdk python3-pip python3-venv
+apt install -y \
+    build-essential git \
+    libssl-dev zlib1g-dev libbz2-dev \
+    libreadline-dev libsqlite3-dev \
+    libncursesw5-dev xz-utils tk-dev \
+    libxml2-dev libxmlsec1-dev \
+    libffi-dev liblzma-dev uuid-dev
 
 snap install astral-uv --classic
 

@@ -57,11 +57,6 @@ variable "client_count" {
   default     = 1
 }
 
-variable "ec2_instance_role" {
-  description = "AWS role with EC2 instance profile for S3 access"
-  type        = string
-}
-
 variable "tags" {
   description = "Optional tags"
   type        = map(string)

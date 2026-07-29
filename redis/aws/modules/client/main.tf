@@ -1,11 +1,17 @@
-# Deploy Redis
+# Deploy Client
 
 data "aws_ami" "ubuntu" {
   most_recent = true
+  owners      = ["099720109477"] # Canonical's AWS account ID
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
   }
 
   filter {
@@ -13,7 +19,10 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
-  owners = ["099720109477"]
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
 }
 
 locals {
@@ -61,10 +70,6 @@ resource "aws_security_group" "client_sg" {
   })
 }
 
-data "aws_iam_instance_profile" "ec2_s3_profile" {
-  name = var.ec2_instance_role
-}
-
 resource "aws_instance" "client_nodes" {
   count                       = var.client_count
   ami                         = data.aws_ami.ubuntu.id
@@ -73,7 +78,6 @@ resource "aws_instance" "client_nodes" {
   vpc_security_group_ids      = [aws_security_group.client_sg.id]
   subnet_id                   = var.aws_subnet_id_list[count.index % length(var.aws_subnet_id_list)]
   associate_public_ip_address = true
-  iam_instance_profile        = data.aws_iam_instance_profile.ec2_s3_profile.name
 
   root_block_device {
     volume_size = var.root_volume_size

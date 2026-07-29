@@ -120,7 +120,7 @@ resource "aws_security_group" "redis_sg" {
 }
 
 locals {
-  cluster_name   = "${var.name}-redis"
+  cluster_name   = var.name
   cluster_domain = "${local.cluster_name}.${data.aws_route53_zone.public_zone.name}"
   cpu_count      = data.aws_ec2_instance_type.machine_type.default_vcpus
 }
