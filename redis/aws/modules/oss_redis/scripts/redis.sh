@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+touch /tmp/redis_install.log && chmod 0666 /tmp/redis_install.log
 exec > /tmp/redis_install.log 2>&1
 
 INSTANCES_PER_NODE="${instances_per_node}"
